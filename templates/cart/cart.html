@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}My Cart – NexStore{% endblock %}
+
+{% block content %}
+<div class="container cart-page">
+  <h1 class="page-title">🛒 Shopping Cart</h1>
+
+  {% if items %}
+  <div class="cart-layout">
+    <!-- Cart Items -->
+    <div class="cart-items">
+      {% for item in items %}
+      <div class="cart-item" id="cartItem{{ item['product_id'] }}">
+        <img src="{{ item['image_url'] }}" alt="{{ item['name'] }}" class="cart-item-img"/>
+        <div class="cart-item-info">
+          <a href="{{ url_for('store.product_detail', product_id=item['product_id']) }}" class="cart-item-name">
+            {{ item['name'] }}
+          </a>
+          {% if item['color_name'] %}
+          <div class="cart-item-variant">
+            <span class="color-dot" style="background-color: {{ item['color_hex'] }};"></span>
+            {{ item['color_name'] }}
+          </div>
+          {% endif %}
+          <div class="cart-item-price">${{ '%.2f'|format(item['price'] + (item['price_modifier'] or 0)) }}</div>
+          {% if item['stock'] <= 5 %}
+          <span class="stock-warning">⚠️ Only {{ item['stock'] }} left</span>
+          {% endif %}
+        </div>
+        <div class="cart-item-controls">
+          <form method="POST" action="{{ url_for('cart.update') }}" class="qty-form">
+            <input type="hidden" name="product_id" value="{{ item['product_id'] }}"/>
+            <div class="qty-controls">
+              <button type="submit" name="quantity" value="{{ item['quantity'] - 1 }}" class="qty-btn">−</button>
+              <span class="qty-display">{{ item['quantity'] }}</span>
+              <button type="submit" name="quantity" value="{{ item['quantity'] + 1 }}" class="qty-btn"
+                      {% if item['quantity'] >= item['stock'] %}disabled{% endif %}>+</button>
+            </div>
+          </form>
+          <div class="cart-item-subtotal">${{ '%.2f'|format((item['price'] + (item['price_modifier'] or 0)) * item['quantity']) }}</div>
+          <form method="POST" action="{{ url_for('cart.remove') }}" class="remove-form">
+            <input type="hidden" name="product_id" value="{{ item['product_id'] }}"/>
+            <button type="submit" class="btn-remove" title="Remove item">🗑️</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Order Summary -->
+    <div class="cart-summary">
+      <h3>Order Summary</h3>
+
+      <!-- Promo Code -->
+      <form method="POST" action="{{ url_for('cart.apply_promo') }}" class="promo-form">
+        <label>Promo Code</label>
+        <div class="promo-input-row">
+          <input type="text" name="promo_code" class="form-input"
+                 placeholder="e.g. DISCOUNT10"
+                 value="{{ promo_code or '' }}"/>
+          <button type="submit" class="btn btn-outline">Apply</button>
+        </div>
+        {% if promo_code %}
+        <p class="promo-applied">✅ Code <strong>{{ promo_code }}</strong> applied!</p>
+        {% endif %}
+      </form>
+
+      <div class="summary-rows">
+        <div class="summary-row"><span>Subtotal</span><span>${{ '%.2f'|format(subtotal) }}</span></div>
+        {% if discount > 0 %}
+        <div class="summary-row discount-row"><span>Discount</span><span>−${{ '%.2f'|format(discount) }}</span></div>
+        {% endif %}
+        <div class="summary-row"><span>Shipping</span>
+          <span>{% if shipping == 0 %}FREE 🎉{% else %}${{ '%.2f'|format(shipping) }}{% endif %}</span>
+        </div>
+        <div class="summary-row total-row"><span>Total</span><span>${{ '%.2f'|format(total) }}</span></div>
+      </div>
+
+      {% if shipping > 0 %}
+      <p class="free-ship-hint">🚚 Add ${{ '%.2f'|format(50 - subtotal) }} more for free shipping!</p>
+      {% endif %}
+
+      <a href="{{ url_for('order.checkout') }}" class="btn btn-primary btn-full btn-lg">
+        Proceed to Checkout →
+      </a>
+      <a href="{{ url_for('store.home') }}" class="btn btn-outline btn-full mt-sm">
+        ← Continue Shopping
+      </a>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">🛒</div>
+    <h3>Your cart is empty</h3>
+    <p>Looks like you haven't added anything yet.</p>
+    <a href="{{ url_for('store.home') }}" class="btn btn-primary btn-lg">Start Shopping →</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

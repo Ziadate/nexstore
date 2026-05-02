@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Admin – NexStore{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --sidebar-w: 250px;
+      --navy: #0d1b2a;
+      --navy2: #1b2a3b;
+      --gold: #f5a623;
+      --gold-dark: #c8861a;
+      --text: #e8edf3;
+      --muted: #8a9bb0;
+      --border: rgba(255,255,255,0.08);
+      --card: rgba(27,42,59,0.9);
+      --success: #2ecc71;
+      --danger: #e74c3c;
+      --warning: #f39c12;
+      --info: #3498db;
+      --radius: 12px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--navy); color: var(--text); display: flex; min-height: 100vh; overflow-x: hidden; }
+    a { color: inherit; text-decoration: none; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: rgba(10,20,32,0.98);
+      border-right: 1px solid var(--border);
+      position: fixed; top: 0; bottom: 0; left: 0;
+      display: flex; flex-direction: column;
+      padding: 1.5rem 1rem;
+      z-index: 100;
+    }
+    .sidebar-logo {
+      display: flex; align-items: center; gap: 0.6rem;
+      font-size: 1.2rem; font-weight: 800; color: var(--gold);
+      padding: 0.5rem; margin-bottom: 2rem;
+    }
+    .sidebar-logo .icon { font-size: 1.6rem; }
+    .nav-section { font-size: 0.7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; padding: 0 0.5rem; margin: 1rem 0 0.5rem; }
+    .nav-link {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.7rem 0.85rem; border-radius: var(--radius);
+      font-size: 0.88rem; font-weight: 500; color: var(--muted);
+      transition: all 0.2s ease; margin-bottom: 2px;
+    }
+    .nav-link .icon { font-size: 1.1rem; width: 20px; text-align: center; }
+    .nav-link:hover { background: rgba(245,166,35,0.08); color: var(--text); }
+    .nav-link.active { background: rgba(245,166,35,0.12); color: var(--gold); font-weight: 600; }
+    .sidebar-footer { margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border); }
+
+    /* ── Main ── */
+    .main-content { margin-left: var(--sidebar-w); flex: 1; padding: 2rem; min-height: 100vh; }
+
+    /* ── Top Bar ── */
+    .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; }
+    .topbar h1 { font-size: 1.6rem; font-weight: 800; }
+    .topbar p  { color: var(--muted); font-size: 0.9rem; margin-top: 0.2rem; }
+    .admin-badge {
+      display: flex; align-items: center; gap: 0.6rem;
+      background: var(--navy2); border: 1px solid var(--border);
+      border-radius: 30px; padding: 0.4rem 1rem; font-size: 0.85rem;
+    }
+    .admin-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--gold); color: #000; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; }
+
+    /* ── Alerts / Flash ── */
+    .flash-list { margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
+    .alert { padding: 0.8rem 1rem; border-radius: var(--radius); font-size: 0.9rem; }
+    .alert-success { background: rgba(46,204,113,0.1); color: var(--success); border: 1px solid rgba(46,204,113,0.3); }
+    .alert-danger  { background: rgba(231,76,60,0.1);  color: var(--danger);  border: 1px solid rgba(231,76,60,0.3);  }
+    .alert-warning { background: rgba(243,156,18,0.1); color: var(--warning); border: 1px solid rgba(243,156,18,0.3); }
+    .alert-info    { background: rgba(52,152,219,0.1); color: var(--info);    border: 1px solid rgba(52,152,219,0.3); }
+
+    /* ── Cards ── */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); }
+    .card-body { padding: 1.5rem; }
+    .card-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .card-header h3 { font-size: 1rem; font-weight: 700; }
+
+    /* ── Stat Cards ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; margin-bottom: 2rem; }
+    .stat-card { display: flex; align-items: center; gap: 1.25rem; padding: 1.5rem; transition: transform 0.2s; }
+    .stat-card:hover { transform: translateY(-3px); }
+    .stat-icon { font-size: 2.4rem; }
+    .stat-value { font-size: 1.7rem; font-weight: 800; color: var(--gold); line-height: 1; }
+    .stat-label { font-size: 0.82rem; color: var(--muted); margin-top: 0.2rem; }
+    .stat-revenue { border-left: 3px solid var(--gold); }
+    .stat-orders  { border-left: 3px solid var(--info); }
+    .stat-products{ border-left: 3px solid var(--success); }
+    .stat-users   { border-left: 3px solid #9b59b6; }
+
+    /* ── Charts ── */
+    .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.25rem; margin-bottom: 2rem; }
+    .chart-wrap { position: relative; height: 250px; }
+
+    /* ── Tables ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    thead th { background: rgba(255,255,255,0.04); padding: 0.85rem 1rem; text-align: left; font-weight: 600; color: var(--muted); white-space: nowrap; }
+    tbody td { padding: 0.8rem 1rem; border-top: 1px solid var(--border); vertical-align: middle; }
+    tbody tr:hover td { background: rgba(255,255,255,0.02); }
+    .product-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; }
+
+    /* ── Badges ── */
+    .badge { padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.74rem; font-weight: 700; white-space: nowrap; }
+    .badge-pending    { background: rgba(243,156,18,0.15); color: var(--warning); }
+    .badge-processing { background: rgba(52,152,219,0.15); color: var(--info); }
+    .badge-shipped    { background: rgba(74,158,255,0.15); color: #4a9eff; }
+    .badge-delivered  { background: rgba(46,204,113,0.15); color: var(--success); }
+    .badge-cancelled  { background: rgba(231,76,60,0.15);  color: var(--danger); }
+    .badge-admin { background: rgba(245,166,35,0.15); color: var(--gold); }
+    .badge-user  { background: rgba(52,152,219,0.15); color: var(--info); }
+
+    /* ── Buttons ── */
+    .btn { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600; font-family: inherit; cursor: pointer; border: none; transition: all 0.2s; }
+    .btn-gold { background: var(--gold); color: #000; }
+    .btn-gold:hover { background: var(--gold-dark); }
+    .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+    .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-danger { background: rgba(231,76,60,0.1); color: var(--danger); border: 1px solid rgba(231,76,60,0.3); }
+    .btn-danger:hover { background: var(--danger); color: #fff; }
+    .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.78rem; }
+
+    /* ── Status Select ── */
+    .status-select {
+      background: var(--navy2); border: 1px solid var(--border);
+      color: var(--text); padding: 0.35rem 0.6rem; border-radius: 8px;
+      font-size: 0.82rem; font-family: inherit; cursor: pointer;
+    }
+    .status-select:focus { outline: none; border-color: var(--gold); }
+
+    /* ── Modal ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px); }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--navy2); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; animation: slideUp 0.25s ease; }
+    @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--navy2); }
+    .modal-header h3 { font-size: 1rem; font-weight: 700; }
+    .modal-close { background: none; border: none; color: var(--muted); font-size: 1.3rem; cursor: pointer; }
+    .modal-close:hover { color: var(--danger); }
+    .modal-body { padding: 1.5rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--muted); margin-bottom: 0.35rem; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 0.7rem 0.9rem; border-radius: 8px;
+      border: 1.5px solid var(--border); background: var(--navy);
+      color: var(--text); font-size: 0.9rem; font-family: inherit; outline: none;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--gold); }
+    .form-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-check { display: flex; align-items: center; gap: 0.5rem; font-size: 0.88rem; cursor: pointer; }
+    .form-checks { display: flex; gap: 1.5rem; margin-top: 0.25rem; }
+
+    /* ── Utils ── */
+    .text-gold { color: var(--gold); }
+    .text-muted { color: var(--muted); }
+    .text-success { color: var(--success); }
+    .text-danger { color: var(--danger); }
+    .fw-bold { font-weight: 700; }
+    .mt-1 { margin-top: 1rem; }
+    .flex-between { display: flex; align-items: center; justify-content: space-between; }
+    .gap-1 { gap: 0.5rem; }
+
+    @media (max-width: 1024px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .charts-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main-content { margin-left: 0; padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <span class="icon">⚡</span>
+    <span>NexStore</span>
+  </div>
+
+  <span class="nav-section">Main</span>
+  <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+    <span class="icon">📊</span> Dashboard
+  </a>
+
+  <span class="nav-section">Manage</span>
+  <a href="{{ url_for('admin.orders') }}" class="nav-link {% if request.endpoint == 'admin.orders' %}active{% endif %}">
+    <span class="icon">📦</span> Orders
+  </a>
+  <a href="{{ url_for('admin.products') }}" class="nav-link {% if request.endpoint in ['admin.products', 'admin.add_product_route', 'admin.edit_product_route'] %}active{% endif %}">
+    <span class="icon">🏷️</span> Products
+  </a>
+  <a href="{{ url_for('admin.users') }}" class="nav-link {% if request.endpoint == 'admin.users' %}active{% endif %}">
+    <span class="icon">👥</span> Users
+  </a>
+
+  <span class="nav-section">System</span>
+  <a href="{{ url_for('store.home') }}" class="nav-link">
+    <span class="icon">🏠</span> View Store
+  </a>
+
+  <div class="sidebar-footer">
+    <a href="{{ url_for('admin.logout') }}" class="nav-link">
+      <span class="icon">🚪</span> Logout
+    </a>
+  </div>
+</aside>
+
+<!-- ── Main Content ── -->
+<main class="main-content">
+  <div class="topbar">
+    <div>
+      <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+      <p>{% block page_subtitle %}Welcome back, Admin{% endblock %}</p>
+    </div>
+    <div class="admin-badge">
+      <div class="admin-avatar">A</div>
+      <span>{{ session.get('admin_email', 'admin@nexstore.com') }}</span>
+    </div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-list">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</main>
+
+<script>
+  // Auto-dismiss alerts
+  document.querySelectorAll('.alert').forEach(el => {
+    setTimeout(() => { el.style.opacity = '0'; el.style.transition = '0.4s'; setTimeout(() => el.remove(), 400); }, 5000);
+  });
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

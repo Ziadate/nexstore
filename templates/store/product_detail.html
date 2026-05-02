@@ -1,0 +1,427 @@
+{% extends 'base.html' %}
+{% block title %}{{ product['name'] }} – NexStore{% endblock %}
+{% block meta_desc %}{{ product['description'][:150] if product['description'] else product['name'] }}{% endblock %}
+
+{% block content %}
+<div class="container product-detail-page">
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb">
+    <a href="{{ url_for('store.home') }}">Home</a> /
+    <a href="{{ url_for('store.category', slug=product['category_slug']) }}">{{ product['category_name'] }}</a> /
+    <span>{{ product['name'] }}</span>
+  </nav>
+
+  <div class="product-detail-grid">
+
+    <!-- ═══════════════ IMAGE GALLERY ═══════════════ -->
+    <div class="gallery">
+      <div class="gallery-main">
+        <img id="mainImg"
+             src="{{ product['image_url'] }}"
+             alt="{{ product['name'] }}"
+             class="main-img"
+             width="600" height="600" loading="eager"/>
+      </div>
+      <div class="gallery-thumbs" id="thumbsRow">
+        <img src="{{ product['image_url'] }}"
+             alt="{{ product['name'] }}"
+             class="thumb active"
+             width="70" height="70"
+             onclick="setThumb(this)"/>
+        {% for v in variants %}
+        {% if v.image_url %}
+        <img src="{{ v.image_url }}"
+             alt="{{ v.color_name }}"
+             class="thumb variant-thumb"
+             data-variant-id="{{ v.id }}"
+             width="70" height="70"
+             onclick="selectVariantFromThumb(this, {{ loop.index0 }})"/>
+        {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- ═══════════════ PRODUCT INFO ═══════════════ -->
+    <div class="product-info-panel">
+      <span class="category-tag">{{ product['category_name'] }}</span>
+      <h1 class="product-detail-name">{{ product['name'] }}</h1>
+
+      <!-- Rating -->
+      <div class="product-rating-row">
+        <span class="stars-lg">{{ '★' * (product['rating']|int) }}{{ '☆' * (5 - product['rating']|int) }}</span>
+        <span class="rating-num">{{ product['rating'] }}</span>
+        <span class="rating-count">({{ product['reviews_count'] }} reviews)</span>
+      </div>
+
+      <!-- Price -->
+      <div class="detail-price-row">
+        <span class="detail-price" id="displayPrice">${{ '%.2f'|format(product['price']) }}</span>
+        {% if product['old_price'] %}
+        <span class="detail-old-price">${{ '%.2f'|format(product['old_price']) }}</span>
+        <span class="detail-discount">
+          -{{ ((product['old_price'] - product['price']) / product['old_price'] * 100)|int }}%
+        </span>
+        {% endif %}
+      </div>
+
+      <!-- Stock badge (updates with JS) -->
+      <div id="stockBadge" class="stock-status {% if product['stock'] > 5 %}in-stock{% elif product['stock'] > 0 %}low-stock{% else %}out-stock{% endif %}">
+        {% if product['stock'] > 5 %}✅ In Stock ({{ product['stock'] }} available)
+        {% elif product['stock'] > 0 %}⚠️ Only {{ product['stock'] }} left!
+        {% else %}❌ Out of Stock{% endif %}
+      </div>
+
+      <!-- ═══ COLOR VARIANT SELECTOR ═══ -->
+      {% if variants %}
+      <div class="variant-section" id="variantSection">
+        <div class="variant-header">
+          <span class="variant-label">Color:</span>
+          <span class="variant-selected-name" id="selectedColorName">— Select a color —</span>
+        </div>
+        <div class="color-circles" id="colorCircles">
+          {% for v in variants %}
+          <button type="button"
+                  class="color-circle {% if v.stock == 0 %}oos{% endif %}"
+                  data-variant-id="{{ v.id }}"
+                  data-color="{{ v.color_name }}"
+                  data-image="{{ v.image_url or '' }}"
+                  data-stock="{{ v.stock }}"
+                  style="--circle-color: {{ v.color_hex }};"
+                  title="{{ v.color_name }}{% if v.stock == 0 %} (Out of Stock){% endif %}"
+                  onclick="selectVariant(this)"
+                  aria-label="{{ v.color_name }}">
+            {% if v.stock == 0 %}<span class="oos-line"></span>{% endif %}
+          </button>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- ═══ ADD TO CART FORM ═══ -->
+      <form method="POST" action="{{ url_for('cart.add') }}" id="addToCartForm">
+        <input type="hidden" name="product_id" value="{{ product['id'] }}"/>
+        <input type="hidden" name="variant_id"  id="variantIdInput" value=""/>
+
+        <div class="qty-selector">
+          <label>Quantity:</label>
+          <div class="qty-controls">
+            <button type="button" class="qty-btn" onclick="changeQty(-1)">−</button>
+            <input type="number" name="quantity" id="qtyInput"
+                   value="1" min="1" max="{{ product['stock'] }}" class="qty-input"/>
+            <button type="button" class="qty-btn" onclick="changeQty(1)">+</button>
+          </div>
+        </div>
+
+        <div class="detail-action-btns">
+          <button type="submit" class="btn btn-primary btn-lg btn-full"
+                  id="addToCartBtn"
+                  {% if product['stock'] == 0 %}disabled{% endif %}>
+            🛒 Add to Cart
+          </button>
+        </div>
+      </form>
+
+      <!-- Wishlist -->
+      <button class="btn btn-outline btn-lg btn-full wishlist-btn mt-sm"
+              data-product-id="{{ product['id'] }}">
+        {% if in_wishlist %}💛 Remove from Wishlist{% else %}❤️ Add to Wishlist{% endif %}
+      </button>
+
+      <!-- Meta -->
+      <div class="product-meta">
+        <div class="meta-item"><span>🏷️ Category:</span> {{ product['category_name'] }}</div>
+        <div class="meta-item"><span>🆔 SKU:</span> NX-{{ '%04d'|format(product['id']) }}</div>
+        <div class="meta-item"><span>📦 Stock:</span>
+          <span id="metaStock">{{ product['stock'] }} units</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TABS ═══════════════ -->
+  <div class="product-tabs">
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="openTab('desc',    this)">Description</button>
+      <button class="tab-btn"        onclick="openTab('specs',   this)">Specifications</button>
+      <button class="tab-btn"        onclick="openTab('reviews', this)">Reviews ({{ product['reviews_count'] }})</button>
+    </div>
+    <div class="tab-content active" id="tab-desc">
+      <p>{{ product['description'] or 'No description available.' }}</p>
+    </div>
+    <div class="tab-content" id="tab-specs">
+      <table class="specs-table">
+        <tr><th>Category</th><td>{{ product['category_name'] }}</td></tr>
+        <tr><th>Rating</th>  <td>{{ product['rating'] }} / 5.0</td></tr>
+        <tr><th>Reviews</th> <td>{{ product['reviews_count'] }}</td></tr>
+        <tr><th>Stock</th>   <td>{{ product['stock'] }} units</td></tr>
+        <tr><th>SKU</th>     <td>NX-{{ '%04d'|format(product['id']) }}</td></tr>
+      </table>
+    </div>
+    <div class="tab-content" id="tab-reviews">
+      <div class="reviews-summary">
+        <div class="big-rating">{{ product['rating'] }}<span>/5</span></div>
+        <div class="stars-lg">{{ '★' * (product['rating']|int) }}{{ '☆' * (5 - product['rating']|int) }}</div>
+        <p>Based on {{ product['reviews_count'] }} reviews</p>
+      </div>
+      <p class="reviews-placeholder">Reviews coming soon… ⭐</p>
+    </div>
+  </div>
+
+  <!-- Related Products -->
+  {% if related %}
+  <section class="related-section">
+    <h2 class="section-title">You might also like</h2>
+    <div class="products-grid">
+      {% for product in related %}
+        {% include 'store/_product_card.html' %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     COLOR VARIANT STYLES
+═══════════════════════════════════════════ -->
+<style>
+/* Price row */
+.detail-price-row  { display:flex; align-items:baseline; gap:.75rem; flex-wrap:wrap; margin:.5rem 0 1rem; }
+.detail-price      { font-size:2rem; font-weight:800; color:var(--gold); }
+.detail-old-price  { font-size:1.1rem; color:var(--text-muted); text-decoration:line-through; }
+.detail-discount   { background:var(--danger); color:#fff; padding:.2rem .6rem; border-radius:6px; font-size:.8rem; font-weight:700; }
+
+/* Meta */
+.product-meta               { padding-top:1rem; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:.5rem; margin-top:1rem; }
+.meta-item                  { display:flex; gap:.5rem; font-size:.88rem; color:var(--text-muted); }
+.meta-item span:first-child { font-weight:600; color:var(--text); }
+
+/* Related */
+.related-section { margin-top:3rem; }
+
+/* ── Variant section ── */
+.variant-section {
+  padding: 1rem 0;
+  border-top: 1px solid var(--border);
+  margin: .5rem 0 1rem;
+}
+.variant-header {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  margin-bottom: .75rem;
+}
+.variant-label {
+  font-weight: 700;
+  font-size: .92rem;
+  color: var(--text);
+}
+.variant-selected-name {
+  font-size: .92rem;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+/* ── Color circles ── */
+.color-circles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem;
+}
+
+.color-circle {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--circle-color);
+  border: 2.5px solid var(--circle-color);
+  cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease;
+  outline: none;
+  flex-shrink: 0;
+}
+
+/* Hover */
+.color-circle:not(.oos):hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 3px rgba(255,255,255,.35), 0 0 0 5px var(--circle-color);
+}
+
+/* Selected state: white inner ring + coloured outer ring */
+.color-circle.selected {
+  transform: scale(1.2);
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 5px var(--circle-color),
+    0 4px 12px rgba(0,0,0,.4);
+}
+
+/* Out of stock: diagonal line */
+.color-circle.oos {
+  opacity: .5;
+  cursor: not-allowed;
+}
+.oos-line {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.oos-line::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -10%;
+  width: 120%;
+  height: 2px;
+  background: rgba(255,255,255,.8);
+  transform: translateY(-50%) rotate(-45deg);
+}
+
+/* ── Main image fade transition ── */
+#mainImg {
+  transition: opacity .3s ease;
+}
+#mainImg.fading {
+  opacity: 0;
+}
+</style>
+
+
+<!-- ═══════════════════════════════════════════
+     VANILLA JS — COLOR VARIANT LOGIC
+═══════════════════════════════════════════ -->
+<script>
+/* ── DOM refs ────────────────────────────────────────────────────── */
+const mainImg        = document.getElementById('mainImg');
+const stockBadge     = document.getElementById('stockBadge');
+const selectedName   = document.getElementById('selectedColorName');
+const variantIdInput = document.getElementById('variantIdInput');
+const addToCartBtn   = document.getElementById('addToCartBtn');
+const qtyInput       = document.getElementById('qtyInput');
+const metaStock      = document.getElementById('metaStock');
+const DEFAULT_IMAGE  = mainImg ? mainImg.src : '';
+const DEFAULT_STOCK  = parseInt(qtyInput ? qtyInput.max : '0', 10);
+
+/* ── Swap image with 0.2s fade ───────────────────────────────────── */
+function swapImage(newSrc) {
+  if (!mainImg || !newSrc) return;
+  mainImg.style.transition = 'opacity 0.2s ease';
+  mainImg.style.opacity = '0';
+  setTimeout(function() {
+    mainImg.src = newSrc;
+    mainImg.style.opacity = '1';
+  }, 200);
+}
+
+/* ── Update thumbnail row ────────────────────────────────────────── */
+function updateActiveThumbnail(imageUrl) {
+  var thumbs = document.querySelectorAll('.thumb');
+  thumbs.forEach(function(t) { t.classList.remove('active'); });
+  // Highlight the thumb whose src matches the selected variant image
+  thumbs.forEach(function(t) {
+    if (t.src && t.src.includes(imageUrl.split('?')[0].split('/').pop())) {
+      t.classList.add('active');
+    }
+  });
+}
+
+/* ── Update stock badge + cart button ────────────────────────────── */
+function updateStock(stock) {
+  stock = parseInt(stock, 10);
+  if (!stockBadge) return;
+  if (stock > 5) {
+    stockBadge.className = 'stock-status in-stock';
+    stockBadge.textContent = 'In Stock (' + stock + ' available)';
+    if (addToCartBtn) addToCartBtn.disabled = false;
+  } else if (stock > 0) {
+    stockBadge.className = 'stock-status low-stock';
+    stockBadge.textContent = 'Only ' + stock + ' left!';
+    if (addToCartBtn) addToCartBtn.disabled = false;
+  } else {
+    stockBadge.className = 'stock-status out-stock';
+    stockBadge.textContent = 'Out of Stock';
+    if (addToCartBtn) addToCartBtn.disabled = true;
+  }
+  if (qtyInput) {
+    qtyInput.max   = stock > 0 ? stock : 1;
+    qtyInput.value = Math.min(parseInt(qtyInput.value, 10) || 1, stock || 1);
+  }
+  if (metaStock) metaStock.textContent = stock + ' units';
+}
+
+/* ── Main: called on circle click ────────────────────────────────── */
+function selectVariant(btn) {
+  if (btn.classList.contains('oos')) return;  // ignore OOS
+
+  /* a) Deselect all circles */
+  document.querySelectorAll('.color-circle').forEach(function(el) {
+    el.classList.remove('selected');
+  });
+  btn.classList.add('selected');
+
+  /* b-d) Get data-* and swap image */
+  var imageUrl  = btn.getAttribute('data-image');
+  var colorName = btn.getAttribute('data-color');
+  var stock     = btn.getAttribute('data-stock');
+  var variantId = btn.getAttribute('data-variant-id');
+
+  swapImage(imageUrl);              // b→d: fade out, change src, fade in
+
+  /* e) Update colour label */
+  if (selectedName) selectedName.textContent = colorName;
+
+  /* f-g) Stock badge & button */
+  updateStock(stock);
+
+  /* Hidden input for cart form */
+  if (variantIdInput) variantIdInput.value = variantId;
+
+  /* Update thumbnail highlight */
+  if (imageUrl) updateActiveThumbnail(imageUrl);
+}
+
+/* ── Quantity buttons ─────────────────────────────────────────────── */
+function changeQty(delta) {
+  if (!qtyInput) return;
+  var max = parseInt(qtyInput.max, 10) || 99;
+  qtyInput.value = Math.max(1, Math.min(max, parseInt(qtyInput.value, 10) + delta));
+}
+
+/* ── Tab controls ─────────────────────────────────────────────────── */
+function openTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.tab-btn').forEach(function(b)    { b.classList.remove('active'); });
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+/* ── Thumbnail click (non-variant) ───────────────────────────────── */
+function setThumb(el) {
+  document.querySelectorAll('.thumb').forEach(function(t) { t.classList.remove('active'); });
+  el.classList.add('active');
+  if (mainImg) {
+    mainImg.style.transition = 'opacity 0.2s ease';
+    mainImg.style.opacity = '0';
+    setTimeout(function() {
+      mainImg.src = el.src;
+      mainImg.style.opacity = '1';
+    }, 200);
+  }
+}
+
+/* ── Auto-select first available variant on page load ────────────── */
+document.addEventListener('DOMContentLoaded', function() {
+  var firstCircle = document.querySelector('.color-circle:not(.oos)');
+  if (firstCircle) {
+    selectVariant(firstCircle);
+  }
+});
+
+
+</script>
+
+{% endblock %}

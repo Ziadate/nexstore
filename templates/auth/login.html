@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% block title %}Login / Register – NexStore{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-visual">
+    <div class="auth-visual-content">
+      <h1>⚡ NexStore</h1>
+      <p>Your premium destination for the latest tech, fashion, and lifestyle products.</p>
+      <div class="auth-features">
+        <div class="auth-feature"><span>🚚</span> Free shipping over $50</div>
+        <div class="auth-feature"><span>🔒</span> Secure payments</div>
+        <div class="auth-feature"><span>↩️</span> Easy 30-day returns</div>
+        <div class="auth-feature"><span>⭐</span> 50,000+ happy customers</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-form-panel">
+    <!-- Tabs -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="loginTab" onclick="switchTab('login')">Login</button>
+      <button class="auth-tab" id="registerTab" onclick="switchTab('register')">Register</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div class="auth-form-wrapper" id="loginForm">
+      <h2>Welcome back! 👋</h2>
+      <p class="auth-sub">Sign in to your account to continue shopping</p>
+      <form method="POST" action="{{ url_for('auth.login') }}" novalidate>
+        <div class="form-group">
+          <label for="loginEmail">Email address</label>
+          <div class="input-wrapper">
+            <span class="input-icon">📧</span>
+            <input type="email" id="loginEmail" name="email" class="form-input"
+                   placeholder="you@example.com" required autocomplete="email"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔒</span>
+            <input type="password" id="loginPassword" name="password" class="form-input"
+                   placeholder="Your password" required autocomplete="current-password"/>
+            <button type="button" class="pw-toggle" onclick="togglePw('loginPassword', this)">👁️</button>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="checkbox-label">
+            <input type="checkbox" name="remember" id="remember"/> Remember me
+          </label>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full btn-lg">Sign In →</button>
+      </form>
+      <p class="auth-switch">Don't have an account? <a href="#" onclick="switchTab('register')">Register free</a></p>
+      <div class="demo-creds">
+        <p>🧪 Demo accounts:</p>
+        <code>admin@store.com / admin123</code><br/>
+        <code>user@store.com / user123</code>
+      </div>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div class="auth-form-wrapper hidden" id="registerForm">
+      <h2>Create account ✨</h2>
+      <p class="auth-sub">Join NexStore and start shopping today</p>
+      <form method="POST" action="{{ url_for('auth.register') }}" novalidate id="regForm">
+        <div class="form-group">
+          <label for="regName">Full Name</label>
+          <div class="input-wrapper">
+            <span class="input-icon">👤</span>
+            <input type="text" id="regName" name="name" class="form-input"
+                   placeholder="John Doe" required/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="regEmail">Email address</label>
+          <div class="input-wrapper">
+            <span class="input-icon">📧</span>
+            <input type="email" id="regEmail" name="email" class="form-input"
+                   placeholder="you@example.com" required/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="regPassword">Password</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔒</span>
+            <input type="password" id="regPassword" name="password" class="form-input"
+                   placeholder="Min. 6 characters" required minlength="6"/>
+            <button type="button" class="pw-toggle" onclick="togglePw('regPassword', this)">👁️</button>
+          </div>
+          <div class="pw-strength" id="pwStrength"></div>
+        </div>
+        <div class="form-group">
+          <label for="regConfirm">Confirm Password</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔒</span>
+            <input type="password" id="regConfirm" name="confirm_password" class="form-input"
+                   placeholder="Repeat password" required/>
+          </div>
+          <p class="field-error" id="confirmError"></p>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full btn-lg">Create Account →</button>
+      </form>
+      <p class="auth-switch">Already have an account? <a href="#" onclick="switchTab('login')">Sign in</a></p>
+    </div>
+  </div>
+</div>
+
+<script>
+const urlHash = window.location.hash;
+if (urlHash === '#register') switchTab('register');
+
+function switchTab(tab) {
+  document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+  document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
+  document.getElementById('loginTab').classList.toggle('active', tab === 'login');
+  document.getElementById('registerTab').classList.toggle('active', tab === 'register');
+}
+function togglePw(id, btn) {
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  btn.textContent = inp.type === 'password' ? '👁️' : '🙈';
+}
+// Password strength meter
+document.getElementById('regPassword')?.addEventListener('input', function() {
+  const v = this.value, bar = document.getElementById('pwStrength');
+  let str = 0, label = '', cls = '';
+  if (v.length >= 6)  str++;
+  if (v.length >= 10) str++;
+  if (/[A-Z]/.test(v)) str++;
+  if (/[0-9]/.test(v)) str++;
+  if (/[^A-Za-z0-9]/.test(v)) str++;
+  if (str <= 1)      { label='Weak';   cls='weak'; }
+  else if (str <= 3) { label='Fair';   cls='fair'; }
+  else               { label='Strong'; cls='strong'; }
+  bar.innerHTML = `<div class="pw-bar ${cls}"></div><span>${label}</span>`;
+});
+// Confirm password match
+document.getElementById('regConfirm')?.addEventListener('input', function() {
+  const pw = document.getElementById('regPassword').value;
+  const err = document.getElementById('confirmError');
+  err.textContent = this.value && this.value !== pw ? 'Passwords do not match' : '';
+});
+</script>
+{% endblock %}

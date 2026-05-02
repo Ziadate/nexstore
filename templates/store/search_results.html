@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Search: {{ query }} – NexStore{% endblock %}
+
+{% block content %}
+<div class="container listing-page">
+  <div class="listing-layout">
+    <aside class="filters-sidebar">
+      <h3>🔧 Filters</h3>
+      <form method="GET">
+        <input type="hidden" name="q" value="{{ query }}"/>
+        <div class="filter-group">
+          <label>Sort By</label>
+          <select name="sort" class="form-input" onchange="this.form.submit()">
+            <option value="newest"     {% if sort=='newest'     %}selected{% endif %}>Newest</option>
+            <option value="price_asc"  {% if sort=='price_asc'  %}selected{% endif %}>Price: Low → High</option>
+            <option value="price_desc" {% if sort=='price_desc' %}selected{% endif %}>Price: High → Low</option>
+            <option value="rating"     {% if sort=='rating'     %}selected{% endif %}>Best Rated</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Category</label>
+          {% for cat in categories %}
+          <a href="{{ url_for('store.category', slug=cat['slug']) }}" class="sidebar-cat-link">
+            {{ cat['icon'] }} {{ cat['name'] }}
+          </a>
+          {% endfor %}
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Apply</button>
+      </form>
+    </aside>
+
+    <div class="listing-main">
+      <div class="listing-header">
+        <h1>Search: "{{ query }}"</h1>
+        <span class="results-count">{{ products|length }} result{% if products|length != 1 %}s{% endif %}</span>
+      </div>
+      {% if products %}
+      <div class="products-grid">
+        {% for product in products %}
+          {% include 'store/_product_card.html' %}
+        {% endfor %}
+      </div>
+      {% elif query %}
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <h3>No results for "{{ query }}"</h3>
+        <p>Try different keywords or <a href="{{ url_for('store.home') }}">browse all products</a>.</p>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <h3>Start searching</h3>
+        <p>Use the search bar above to find products.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,5 @@
+{% extends 'auth/login.html' %}
+{# Register page simply opens login.html with the register tab pre-selected #}
+{% block extra_js %}
+<script>switchTab('register');</script>
+{% endblock %}

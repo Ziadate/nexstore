@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Order Confirmed! – NexStore{% endblock %}
+
+{% block content %}
+<div class="success-page">
+  <div id="confettiCanvas"></div>
+  <div class="success-card">
+    <div class="success-icon">🎉</div>
+    <h1>Order Placed Successfully!</h1>
+    <p class="success-sub">Thank you for your purchase. Your order is being processed.</p>
+    <div class="order-badge">Order #{{ order['id'] }}</div>
+
+    <div class="order-details-box">
+      <div class="order-detail-row">
+        <span>📍 Delivery to:</span>
+        <span>{{ order['address'] }}</span>
+      </div>
+      <div class="order-detail-row">
+        <span>💳 Payment:</span>
+        <span>{{ {'cod':'Cash on Delivery','card':'Credit Card','wallet':'Wallet'}[order['payment_method']] }}</span>
+      </div>
+      <div class="order-detail-row">
+        <span>📦 Status:</span>
+        <span class="status-badge status-{{ order['status'] }}">{{ order['status']|capitalize }}</span>
+      </div>
+      <div class="order-detail-row total-row">
+        <span>💰 Total Paid:</span>
+        <span>${{ '%.2f'|format(order['total_price']) }}</span>
+      </div>
+    </div>
+
+    <h3>Items Ordered</h3>
+    <div class="success-items">
+      {% for item in items %}
+      <div class="success-item">
+        <img src="{{ item['image_url'] }}" alt="{{ item['product_name'] }}" class="success-item-img"/>
+        <div>
+          <p class="success-item-name">{{ item['product_name'] }}</p>
+          <p>Qty: {{ item['quantity'] }} × ${{ '%.2f'|format(item['price']) }}</p>
+        </div>
+        <span class="success-item-total">${{ '%.2f'|format(item['price'] * item['quantity']) }}</span>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="success-actions">
+      <a href="{{ url_for('order.profile') }}#orders" class="btn btn-outline btn-lg">📦 View My Orders</a>
+      <a href="{{ url_for('store.home') }}" class="btn btn-primary btn-lg">Continue Shopping →</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Confetti burst effect
+(function() {
+  const colors = ['#FFD700','#C0392B','#2980B9','#27AE60','#8E44AD','#E67E22','#1ABC9C'];
+  const container = document.getElementById('confettiCanvas');
+  for (let i = 0; i < 120; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `
+      left:${Math.random()*100}vw;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      width:${6+Math.random()*8}px;
+      height:${10+Math.random()*10}px;
+      animation-delay:${Math.random()*3}s;
+      animation-duration:${3+Math.random()*4}s;
+      border-radius:${Math.random()>0.5?'50%':'2px'};
+    `;
+    container.appendChild(el);
+  }
+  setTimeout(() => container.style.display = 'none', 8000);
+})();
+</script>
+{% endblock %}

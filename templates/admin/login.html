@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login – NexStore</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(ellipse at top, #1b3a5c 0%, #0d1b2a 60%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .login-card {
+      background: rgba(13, 27, 42, 0.92);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(245, 166, 35, 0.5);
+      border-radius: 20px;
+      padding: 3rem 2.5rem;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+      text-align: center;
+    }
+    .logo { font-size: 3.5rem; margin-bottom: 1rem; display: block; }
+    h2 { color: #f5a623; font-size: 1.9rem; font-weight: 800; margin-bottom: 0.4rem; }
+    .sub { color: #8a9bb0; margin-bottom: 2rem; font-size: 0.9rem; }
+    .alert {
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      margin-bottom: 1.25rem;
+      font-size: 0.9rem;
+      text-align: left;
+    }
+    .alert-danger  { background: rgba(231,76,60,0.15); color: #e74c3c; border: 1px solid rgba(231,76,60,0.3); }
+    .alert-success { background: rgba(46,204,113,0.15); color: #2ecc71; border: 1px solid rgba(46,204,113,0.3); }
+    .alert-warning { background: rgba(243,156,18,0.15); color: #f39c12; border: 1px solid rgba(243,156,18,0.3); }
+    .alert-info    { background: rgba(52,152,219,0.15); color: #3498db; border: 1px solid rgba(52,152,219,0.3); }
+    .form-group { margin-bottom: 1.2rem; text-align: left; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #8a9bb0; margin-bottom: 0.45rem; }
+    .form-group input {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      border-radius: 10px;
+      border: 1.5px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.05);
+      color: #e8edf3;
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.25s;
+    }
+    .form-group input:focus { border-color: #f5a623; background: rgba(245,166,35,0.05); }
+    .btn-login {
+      width: 100%;
+      padding: 0.9rem;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, #f5a623, #c8861a);
+      color: #000;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 0.5rem;
+      letter-spacing: 0.03em;
+    }
+    .btn-login:hover { box-shadow: 0 8px 25px rgba(245,166,35,0.45); filter: brightness(1.08); transform: translateY(-1px); }
+    .hint { margin-top: 2rem; padding: 1rem; background: rgba(255,255,255,0.04); border-radius: 10px; font-size: 0.8rem; color: #8a9bb0; }
+    .hint strong { color: #f5a623; }
+    .back-link { display: block; margin-top: 1.5rem; color: #8a9bb0; font-size: 0.85rem; }
+    .back-link:hover { color: #f5a623; }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <span class="logo">⚡</span>
+    <h2>NexStore Admin</h2>
+    <p class="sub">Enter your administrator credentials to continue</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('admin.admin_login') }}">
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" placeholder="admin@nexstore.com"
+               value="{{ request.form.get('email', '') }}" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn-login">🔐 Sign In to Dashboard</button>
+    </form>
+
+    <div class="hint">
+      <strong>Credentials:</strong><br>
+      Email: admin@nexstore.com<br>
+      Password: nexstore2024
+    </div>
+
+    <a href="{{ url_for('store.home') }}" class="back-link">← Back to Store</a>
+  </div>
+</body>
+</html>

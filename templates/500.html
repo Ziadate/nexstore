@@ -1,0 +1,10 @@
+{% extends 'base.html' %}{% block title %}Server Error – NexStore{% endblock %}
+{% block content %}
+<div class="container" style="text-align:center;padding:5rem 1rem">
+  <div style="font-size:6rem">⚠️</div>
+  <h1 style="font-size:4rem;color:var(--gold)">500</h1>
+  <h2>Something went wrong</h2>
+  <p>Our team has been notified. Please try again later.</p>
+  <a href="{{ url_for('store.home') }}" class="btn btn-primary btn-lg" style="margin-top:1.5rem">← Back to Home</a>
+</div>
+{% endblock %}

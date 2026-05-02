@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% block title %}NexStore – Premium Online Shopping{% endblock %}
+{% block meta_desc %}Shop the latest phones, laptops, headphones, fashion and more at NexStore.{% endblock %}
+
+{% block content %}
+<!-- ══════════════ HERO CAROUSEL ══════════════ -->
+<section class="hero-section">
+  <div class="hero-carousel" id="heroCarousel">
+    <div class="hero-slide active" style="background: linear-gradient(135deg,#0f1629 0%,#1a2744 50%,#0d1f3c 100%)">
+      <div class="hero-content">
+        <span class="hero-badge">🔥 New Arrival</span>
+        <h1>iPhone 15 Pro Max</h1>
+        <p>Titanium. So strong. So light. So Pro. Experience the A17 Pro chip.</p>
+        <div class="hero-price"><span class="old-price">$1,499</span><span class="new-price">$1,299</span></div>
+        <a href="{{ url_for('store.product_detail', product_id=2) }}" class="btn btn-gold btn-lg">Shop Now →</a>
+      </div>
+      <div class="hero-img"><img src="https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=800&auto=format&fit=crop&q=80" alt="iPhone 15 Pro Max" width="500" height="400" loading="lazy"/></div>
+    </div>
+    <div class="hero-slide" style="background: linear-gradient(135deg,#0d1f1a 0%,#1a3a2a 50%,#0a1f15 100%)">
+      <div class="hero-content">
+        <span class="hero-badge">🎮 Gaming</span>
+        <h1>PlayStation 5</h1>
+        <p>Play has no limits. Experience lightning-fast loading with PS5.</p>
+        <div class="hero-price"><span class="old-price">$549</span><span class="new-price">$499</span></div>
+        <a href="{{ url_for('store.product_detail', product_id=26) }}" class="btn btn-gold btn-lg">Shop Now →</a>
+      </div>
+      <div class="hero-img"><img src="https://images.unsplash.com/photo-1606813907291-d86efa9b94db?auto=format&fit=crop&w=800&q=80" alt="PlayStation 5" width="500" height="400" loading="lazy"/></div>
+    </div>
+    <div class="hero-slide" style="background: linear-gradient(135deg,#1a0f29 0%,#2d1b4e 50%,#1a0f29 100%)">
+      <div class="hero-content">
+        <span class="hero-badge">💻 Best Seller</span>
+        <h1>MacBook Pro M3 Max</h1>
+        <p>The most powerful MacBook ever. Unstoppable performance.</p>
+        <div class="hero-price"><span class="old-price">$2,799</span><span class="new-price">$2,499</span></div>
+        <a href="{{ url_for('store.product_detail', product_id=11) }}" class="btn btn-gold btn-lg">Shop Now →</a>
+      </div>
+      <div class="hero-img"><img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80" alt="MacBook Pro" width="500" height="400" loading="lazy"/></div>
+    </div>
+    <div class="hero-slide" style="background: linear-gradient(135deg,#1a1a0d 0%,#2d2a0a 50%,#1a1a0d 100%)">
+      <div class="hero-content">
+        <span class="hero-badge">📱 Top Seller</span>
+        <h1>Samsung Galaxy S24 Ultra</h1>
+        <p>AI-powered camera, titanium frame, and the most intelligent Galaxy yet.</p>
+        <div class="hero-price"><span class="old-price">$1,399</span><span class="new-price">$1,199</span></div>
+        <a href="{{ url_for('store.product_detail', product_id=1) }}" class="btn btn-gold btn-lg">Shop Now &rarr;</a>
+      </div>
+      <div class="hero-img"><img src="https://images.unsplash.com/photo-1610945264803-c22b62d2a7b3?w=800&auto=format&fit=crop&q=80" alt="Samsung Galaxy S24 Ultra" width="500" height="400" loading="lazy"/></div>
+    </div>
+  </div>
+  <div class="hero-dots" id="heroDots">
+    <button class="dot active" onclick="goSlide(0)" aria-label="Slide 1"></button>
+    <button class="dot" onclick="goSlide(1)" aria-label="Slide 2"></button>
+    <button class="dot" onclick="goSlide(2)" aria-label="Slide 3"></button>
+    <button class="dot" onclick="goSlide(3)" aria-label="Slide 4"></button>
+  </div>
+  <button class="hero-arrow hero-prev" id="heroPrevBtn" onclick="prevSlide()" aria-label="Previous">‹</button>
+  <button class="hero-arrow hero-next" id="heroNextBtn" onclick="nextSlide()" aria-label="Next">›</button>
+</section>
+
+<!-- ══════════════ CATEGORIES ══════════════ -->
+<section class="section">
+  <div class="container">
+    <h2 class="section-title">Shop by Category</h2>
+    <div class="categories-row">
+      {% for cat in categories %}
+      <a href="{{ url_for('store.category', slug=cat['slug']) }}" class="category-card">
+        <div class="cat-icon">{{ cat['icon'] }}</div>
+        <span class="cat-name">{{ cat['name'] }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ FEATURED PRODUCTS ══════════════ -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">✨ Featured Products</h2>
+      <a href="{{ url_for('store.search') }}" class="see-all-link">View all →</a>
+    </div>
+    <div class="products-grid">
+      {% for product in featured %}
+        {% include 'store/_product_card.html' %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ TODAY'S DEALS ══════════════ -->
+<section class="section deals-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">🔥 Today's Deals</h2>
+      <div class="countdown-wrapper">
+        <span>Ends in:</span>
+        <div class="countdown" id="dealCountdown">
+          <div class="countdown-block"><span id="cHours">00</span><label>HRS</label></div>
+          <div class="countdown-sep">:</div>
+          <div class="countdown-block"><span id="cMins">00</span><label>MIN</label></div>
+          <div class="countdown-sep">:</div>
+          <div class="countdown-block"><span id="cSecs">00</span><label>SEC</label></div>
+        </div>
+      </div>
+    </div>
+    <div class="products-grid">
+      {% for product in deals %}
+        {% include 'store/_product_card.html' %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ FLASH SALE BANNER ══════════════ -->
+<section class="flash-sale-banner">
+  <div class="container">
+    <div class="flash-sale-inner">
+      <div class="flash-sale-text">
+        <h2>⚡ Flash Sale — Up to 40% OFF</h2>
+        <p>Limited time offer on selected items. Don't miss out!</p>
+      </div>
+      <div class="flash-progress-bars">
+        <div class="flash-item">
+          <span>Phones</span>
+          <div class="progress-bar"><div class="progress-fill" style="width:72%"></div></div>
+          <span class="sold-label">72% sold</span>
+        </div>
+        <div class="flash-item">
+          <span>Laptops</span>
+          <div class="progress-bar"><div class="progress-fill" style="width:55%"></div></div>
+          <span class="sold-label">55% sold</span>
+        </div>
+        <div class="flash-item">
+          <span>Gaming</span>
+          <div class="progress-bar"><div class="progress-fill" style="width:89%"></div></div>
+          <span class="sold-label">89% sold</span>
+        </div>
+      </div>
+      <a href="{{ url_for('store.search') }}" class="btn btn-gold btn-lg">Shop Now →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ BEST SELLERS ══════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">🏆 Best Sellers</h2>
+      <a href="{{ url_for('store.search') }}" class="see-all-link">View all →</a>
+    </div>
+    <div class="products-scroll" id="bestSellersScroll">
+      {% for product in best_sellers %}
+        <div class="product-scroll-item">{% include 'store/_product_card.html' %}</div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<script>
+// Hero Carousel
+let currentSlide = 0;
+const slides = document.querySelectorAll('.hero-slide');
+const dots   = document.querySelectorAll('.dot');
+function goSlide(n) {
+  slides[currentSlide].classList.remove('active');
+  dots[currentSlide].classList.remove('active');
+  currentSlide = (n + slides.length) % slides.length;
+  slides[currentSlide].classList.add('active');
+  dots[currentSlide].classList.add('active');
+}
+function nextSlide() { goSlide(currentSlide + 1); }
+function prevSlide() { goSlide(currentSlide - 1); }
+setInterval(() => nextSlide(), 5000);
+
+// Countdown timer — 8 hours from now
+const dealEnd = new Date(Date.now() + 8 * 3600 * 1000);
+function updateCountdown() {
+  const diff = dealEnd - Date.now();
+  if (diff <= 0) return;
+  document.getElementById('cHours').textContent = String(Math.floor(diff/3600000)).padStart(2,'0');
+  document.getElementById('cMins').textContent  = String(Math.floor((diff%3600000)/60000)).padStart(2,'0');
+  document.getElementById('cSecs').textContent  = String(Math.floor((diff%60000)/1000)).padStart(2,'0');
+}
+updateCountdown();
+setInterval(updateCountdown, 1000);
+</script>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}{{ category['name'] }} – NexStore{% endblock %}
+
+{% block content %}
+<div class="container listing-page">
+  <nav class="breadcrumb">
+    <a href="{{ url_for('store.home') }}">Home</a> / <span>{{ category['name'] }}</span>
+  </nav>
+  <div class="listing-layout">
+    <!-- Filters sidebar -->
+    <aside class="filters-sidebar">
+      <h3>🔧 Filters</h3>
+      <form method="GET" id="filterForm">
+        <div class="filter-group">
+          <label>Sort By</label>
+          <select name="sort" class="form-input" onchange="this.form.submit()">
+            <option value="newest"     {% if sort=='newest'     %}selected{% endif %}>Newest</option>
+            <option value="price_asc"  {% if sort=='price_asc'  %}selected{% endif %}>Price: Low to High</option>
+            <option value="price_desc" {% if sort=='price_desc' %}selected{% endif %}>Price: High to Low</option>
+            <option value="rating"     {% if sort=='rating'     %}selected{% endif %}>Best Rated</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Price Range</label>
+          <div class="price-inputs">
+            <input type="number" name="min_price" placeholder="Min $" class="form-input"
+                   value="{{ min_price or '' }}" min="0"/>
+            <span>–</span>
+            <input type="number" name="max_price" placeholder="Max $" class="form-input"
+                   value="{{ max_price or '' }}" min="0"/>
+          </div>
+        </div>
+        <div class="filter-group">
+          <label>Min Rating</label>
+          <select name="min_rating" class="form-input">
+            <option value="">Any</option>
+            {% for r in [4.5,4.0,3.5,3.0] %}
+            <option value="{{ r }}" {% if min_rating == r %}selected{% endif %}>{{ r }}+ ⭐</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Apply Filters</button>
+        <a href="{{ url_for('store.category', slug=category['slug']) }}" class="btn btn-outline btn-full mt-sm">Clear</a>
+      </form>
+
+      <div class="sidebar-categories">
+        <h4>Categories</h4>
+        {% for cat in categories %}
+        <a href="{{ url_for('store.category', slug=cat['slug']) }}"
+           class="sidebar-cat-link {% if cat['id'] == category['id'] %}active{% endif %}">
+          {{ cat['icon'] }} {{ cat['name'] }}
+        </a>
+        {% endfor %}
+      </div>
+    </aside>
+
+    <!-- Product grid -->
+    <div class="listing-main">
+      <div class="listing-header">
+        <h1>{{ category['icon'] }} {{ category['name'] }}</h1>
+        <span class="results-count">{{ products|length }} products found</span>
+      </div>
+      {% if products %}
+      <div class="products-grid">
+        {% for product in products %}
+          {% include 'store/_product_card.html' %}
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">📦</div>
+        <h3>No products found</h3>
+        <p>Try adjusting your filters or <a href="{{ url_for('store.category', slug=category['slug']) }}">clear them</a>.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

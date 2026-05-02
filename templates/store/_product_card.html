@@ -1,0 +1,39 @@
+<div class="product-card" data-product-id="{{ product['id'] }}">
+  {% if product['old_price'] %}
+  <div class="badge-sale">SALE</div>
+  {% endif %}
+  {% if product['is_featured'] %}
+  <div class="badge-featured">⭐ Featured</div>
+  {% endif %}
+  <a href="{{ url_for('store.product_detail', product_id=product['id']) }}" class="product-img-link">
+    <img src="{{ product['image_url'] }}" alt="{{ product['name'] }}" class="product-img" loading="lazy" width="300" height="300"/>
+  </a>
+  <div class="product-info">
+    <a href="{{ url_for('store.product_detail', product_id=product['id']) }}" class="product-name">{{ product['name'] }}</a>
+    <div class="product-rating">
+      <span class="stars">{{ '★' * (product['rating']|int) }}{{ '☆' * (5 - product['rating']|int) }}</span>
+      <span class="rating-count">({{ product['reviews_count'] }})</span>
+    </div>
+    <div class="product-price-row">
+      <span class="product-price">${{ '%.2f'|format(product['price']) }}</span>
+      {% if product['old_price'] %}
+      <span class="product-old-price">${{ '%.2f'|format(product['old_price']) }}</span>
+      {% endif %}
+    </div>
+    {% if product['stock'] <= 5 and product['stock'] > 0 %}
+    <p class="stock-warning">⚠️ Only {{ product['stock'] }} left!</p>
+    {% elif product['stock'] == 0 %}
+    <p class="out-of-stock">❌ Out of stock</p>
+    {% endif %}
+    <div class="product-actions">
+      <a href="{{ url_for('store.product_detail', product_id=product['id']) }}"
+         class="btn btn-primary btn-sm add-cart-btn"
+         {% if product['stock'] == 0 %}style="opacity:0.5;pointer-events:none;"{% endif %}>
+        🛒 Add to Cart
+      </a>
+      <button class="wishlist-btn {% if session.get('user_id') %}{% endif %}"
+              data-product-id="{{ product['id'] }}"
+              title="Add to Wishlist" aria-label="Wishlist">❤️</button>
+    </div>
+  </div>
+</div>

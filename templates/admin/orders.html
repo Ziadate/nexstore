@@ -1,0 +1,101 @@
+{% extends 'admin/layout.html' %}
+{% block title %}Orders – NexStore Admin{% endblock %}
+{% block page_title %}Orders{% endblock %}
+{% block page_subtitle %}Manage all customer orders{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3>📦 All Orders ({{ orders_with_items|length }})</h3>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Customer</th>
+          <th>Products</th>
+          <th>Total</th>
+          <th>Payment</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in orders_with_items %}
+        {% set o = row.order %}
+        <tr id="row-{{ o.id }}">
+          <td class="fw-bold text-gold">#{{ o.id }}</td>
+          <td>
+            <div class="fw-bold">{{ o.user_name }}</div>
+            <div class="text-muted" style="font-size:0.75rem">{{ o.user_email }}</div>
+          </td>
+          <td>
+            {% for item in row.order_items %}
+            <div style="font-size:0.82rem; margin-bottom:2px;">
+              {{ item.product_name }}
+              <span class="text-muted">× {{ item.quantity }}</span>
+            </div>
+            {% else %}
+            <span class="text-muted">—</span>
+            {% endfor %}
+          </td>
+          <td class="text-success fw-bold">${{ '%.2f'|format(o.total_price) }}</td>
+          <td>
+            <span class="badge badge-processing">{{ (o.payment_method or 'cod')|upper }}</span>
+          </td>
+          <td class="text-muted" style="font-size:0.8rem">{{ o.created_at[:10] if o.created_at else '—' }}</td>
+          <td>
+            <span class="badge badge-{{ o.status }}" id="badge-{{ o.id }}">{{ o.status|capitalize }}</span>
+          </td>
+          <td>
+            <select class="status-select" onchange="updateStatus({{ o.id }}, this.value)">
+              {% for s in ['pending','processing','shipped','delivered','cancelled'] %}
+              <option value="{{ s }}" {% if s == o.status %}selected{% endif %}>{{ s|capitalize }}</option>
+              {% endfor %}
+            </select>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:3rem">No orders found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateStatus(orderId, status) {
+  const form = new FormData();
+  form.append('order_id', orderId);
+  form.append('status', status);
+
+  fetch('{{ url_for("admin.update_order") }}', {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    body: form
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      const badge = document.getElementById('badge-' + orderId);
+      if (badge) {
+        badge.className = 'badge badge-' + data.status;
+        badge.textContent = data.status.charAt(0).toUpperCase() + data.status.slice(1);
+      }
+      // Quick success flash
+      const flash = document.createElement('div');
+      flash.className = 'alert alert-success';
+      flash.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:9999;padding:0.75rem 1.25rem;border-radius:10px';
+      flash.textContent = `Order #${orderId} updated to "${data.status}"`;
+      document.body.appendChild(flash);
+      setTimeout(() => flash.remove(), 3000);
+    }
+  })
+  .catch(() => alert('Failed to update order status.'));
+}
+</script>
+{% endblock %}
