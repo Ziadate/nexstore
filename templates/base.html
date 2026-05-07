@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>{% block title %}NexStore ΓÇô Premium Online Shopping{% endblock %}</title>
+  <title>{% block title %}NexStore &#8211; Premium Online Shopping{% endblock %}</title>
   <meta name="description" content="{% block meta_desc %}Shop the latest electronics, fashion and more at NexStore.{% endblock %}"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -11,54 +11,48 @@
 </head>
 <body>
 
-<!-- ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ NAVBAR ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ -->
+<!-- NAVBAR -->
 <nav class="navbar" id="mainNav">
   <div class="nav-inner">
-    <!-- Logo -->
     <a href="{{ url_for('store.home') }}" class="nav-logo">
-      <span class="logo-icon">ΓÜí</span>
+      <span class="logo-icon">&#9889;</span>
       <span class="logo-text">NexStore</span>
     </a>
 
-    <!-- Search bar -->
     <div class="search-wrapper" id="searchWrapper">
       <form action="{{ url_for('store.search') }}" method="get" class="search-form" autocomplete="off">
         <input type="text" name="q" id="searchInput" class="search-input"
-               placeholder="Search products, brands, categoriesΓÇª"
+               placeholder="Search products, brands, categories&#8230;"
                value="{{ request.args.get('q','') }}"/>
-        <button type="submit" class="search-btn" aria-label="Search">≡ƒöì</button>
+        <button type="submit" class="search-btn" aria-label="Search">&#128269;</button>
       </form>
       <div class="search-dropdown" id="searchDropdown"></div>
     </div>
 
-    <!-- Right actions -->
     <div class="nav-actions">
-      <!-- Theme toggle -->
       <button class="icon-btn theme-toggle" id="themeToggle" title="Toggle theme" aria-label="Toggle dark/light mode">
-        <span class="theme-icon">≡ƒîÖ</span>
+        <span class="theme-icon">&#127769;</span>
       </button>
 
       {% if session.get('user_id') %}
-        <!-- Cart -->
         <a href="{{ url_for('cart.view_cart') }}" class="icon-btn cart-btn" id="cartBtn" aria-label="Cart">
-          ≡ƒ¢Æ
+          &#128722;
           <span class="badge" id="cartBadge">{{ cart_count|default(0) }}</span>
         </a>
 
-        <!-- User menu -->
         <div class="user-menu-wrapper">
           <button class="user-btn icon-btn" id="userMenuBtn" aria-label="User menu">
-            ≡ƒæñ <span class="user-name-short">{{ session.get('user_name','').split()[0] }}</span> Γû╛
+            &#128100; <span class="user-name-short">{{ session.get('user_name','').split()[0] }}</span> &#9660;
           </button>
           <div class="user-dropdown" id="userDropdown">
-            <a href="{{ url_for('order.profile') }}">≡ƒæñ My Profile</a>
-            <a href="{{ url_for('order.profile') }}#orders">≡ƒôª My Orders</a>
-            <a href="{{ url_for('order.profile') }}#wishlist">Γ¥ñ∩╕Å Wishlist</a>
+            <a href="{{ url_for('order.profile') }}">&#128100; My Profile</a>
+            <a href="{{ url_for('order.profile') }}#orders">&#128203; My Orders</a>
+            <a href="{{ url_for('order.profile') }}#wishlist">&#10084;&#65039; Wishlist</a>
             {% if session.get('role') == 'admin' %}
-            <a href="{{ url_for('admin.dashboard') }}">ΓÜÖ∩╕Å Admin Dashboard</a>
+            <a href="{{ url_for('admin.dashboard') }}">&#9881;&#65039; Admin Dashboard</a>
             {% endif %}
             <hr/>
-            <a href="{{ url_for('auth.logout') }}" class="logout-link">≡ƒÜ¬ Logout</a>
+            <a href="{{ url_for('auth.logout') }}" class="logout-link">&#128682; Logout</a>
           </div>
         </div>
       {% else %}
@@ -66,52 +60,50 @@
         <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">Register</a>
       {% endif %}
 
-      <!-- Mobile hamburger -->
-      <button class="hamburger" id="hamburger" aria-label="Menu">Γÿ░</button>
+      <button class="hamburger" id="hamburger" aria-label="Menu">&#9776;</button>
     </div>
   </div>
 
-  <!-- Mobile nav -->
   <div class="mobile-nav" id="mobileNav">
-    <a href="{{ url_for('store.home') }}">≡ƒÅá Home</a>
-    <a href="{{ url_for('store.search') }}">≡ƒöì Search</a>
+    <a href="{{ url_for('store.home') }}">&#127968; Home</a>
+    <a href="{{ url_for('store.search') }}">&#128269; Search</a>
     {% if session.get('user_id') %}
-    <a href="{{ url_for('cart.view_cart') }}">≡ƒ¢Æ Cart ({{ cart_count|default(0) }})</a>
-    <a href="{{ url_for('order.profile') }}">≡ƒæñ Profile</a>
-    {% if session.get('role') == 'admin' %}<a href="{{ url_for('admin.dashboard') }}">ΓÜÖ∩╕Å Admin</a>{% endif %}
-    <a href="{{ url_for('auth.logout') }}">≡ƒÜ¬ Logout</a>
+    <a href="{{ url_for('cart.view_cart') }}">&#128722; Cart ({{ cart_count|default(0) }})</a>
+    <a href="{{ url_for('order.profile') }}">&#128100; Profile</a>
+    {% if session.get('role') == 'admin' %}<a href="{{ url_for('admin.dashboard') }}">&#9881;&#65039; Admin</a>{% endif %}
+    <a href="{{ url_for('auth.logout') }}">&#128682; Logout</a>
     {% else %}
-    <a href="{{ url_for('auth.login') }}">≡ƒöÉ Login</a>
-    <a href="{{ url_for('auth.register') }}">Γ£¿ Register</a>
+    <a href="{{ url_for('auth.login') }}">&#128273; Login</a>
+    <a href="{{ url_for('auth.register') }}">&#10003; Register</a>
     {% endif %}
   </div>
 </nav>
 
-<!-- ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ TOAST CONTAINER ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ -->
+<!-- TOAST CONTAINER -->
 <div class="toast-container" id="toastContainer">
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% for category, message in messages %}
     <div class="toast toast-{{ category }} show" role="alert">
       <span class="toast-icon">
-        {% if category == 'success' %}Γ£à{% elif category == 'danger' %}Γ¥î{% elif category == 'warning' %}ΓÜá∩╕Å{% else %}Γä╣∩╕Å{% endif %}
+        {% if category == 'success' %}&#10003;{% elif category == 'danger' %}&#10007;{% elif category == 'warning' %}&#9888;{% else %}&#8505;{% endif %}
       </span>
       <span class="toast-msg">{{ message }}</span>
-      <button class="toast-close" onclick="this.parentElement.remove()">Γ£ò</button>
+      <button class="toast-close" onclick="this.parentElement.remove()">&#10005;</button>
     </div>
     {% endfor %}
   {% endwith %}
 </div>
 
-<!-- ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ MAIN ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ -->
+<!-- MAIN -->
 <main class="main-content">
   {% block content %}{% endblock %}
 </main>
 
-<!-- ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ FOOTER ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ -->
+<!-- FOOTER -->
 <footer class="footer">
   <div class="footer-inner">
     <div class="footer-brand">
-      <span class="logo-icon">ΓÜí</span>
+      <span class="logo-icon">&#9889;</span>
       <span class="logo-text">NexStore</span>
       <p>Your premium destination for the latest tech, fashion, and lifestyle products.</p>
     </div>
@@ -137,11 +129,73 @@
     </div>
   </div>
   <div class="footer-bottom">
-    <p>┬⌐ 2025 NexStore. Built with Γ¥ñ∩╕Å using Flask &amp; SQLite.</p>
+    <p>&copy; 2025 NexStore. Built with &#10084;&#65039; using Flask &amp; SQLite.</p>
   </div>
 </footer>
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 {% block extra_js %}{% endblock %}
+
+<!-- Chatbot -->
+<div id="chatbot-container" style="position:fixed;bottom:20px;right:20px;z-index:9999">
+  <div id="chatbot-box" style="display:none;width:320px;height:420px;background:#1a1a2e;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,0.3);flex-direction:column;overflow:hidden">
+    <div style="background:#FFB800;padding:15px;display:flex;justify-content:space-between;align-items:center">
+      <span style="color:#000;font-weight:bold">&#129302; NexStore Assistant</span>
+      <button onclick="toggleChat()" style="background:none;border:none;color:#000;font-size:20px;cursor:pointer">&#10005;</button>
+    </div>
+    <div id="chat-messages" style="flex:1;overflow-y:auto;padding:15px;display:flex;flex-direction:column;gap:10px;height:300px"></div>
+    <div style="padding:10px;border-top:1px solid #333;display:flex;gap:10px">
+      <input id="chat-input" type="text" placeholder="Ask me anything..." style="flex:1;padding:8px;border-radius:8px;border:none;background:#333;color:#fff;outline:none">
+      <button onclick="sendMessage()" style="background:#FFB800;border:none;padding:8px 15px;border-radius:8px;cursor:pointer;font-weight:bold">Send</button>
+    </div>
+  </div>
+  <button onclick="toggleChat()" style="width:60px;height:60px;border-radius:50%;background:#FFB800;border:none;font-size:25px;cursor:pointer;box-shadow:0 5px 15px rgba(0,0,0,0.3)">&#129302;</button>
+</div>
+
+<script>
+function toggleChat() {
+  const box = document.getElementById('chatbot-box');
+  box.style.display = box.style.display === 'none' ? 'flex' : 'none';
+}
+function addMessage(text, isUser) {
+  const messages = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.style.cssText = isUser
+    ? 'padding:10px;border-radius:10px;max-width:80%;background:#FFB800;color:#000;align-self:flex-end'
+    : 'padding:10px;border-radius:10px;max-width:80%;background:#333;color:#fff;align-self:flex-start';
+  div.textContent = text;
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+  return div;
+}
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const message = input.value.trim();
+  if (!message) return;
+  addMessage(message, true);
+  input.value = '';
+  const loadingDiv = addMessage('...', false);
+  try {
+    const response = await fetch('/chatbot', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({message: message})
+    });
+    const data = await response.json();
+    loadingDiv.textContent = data.response || 'Error!';
+  } catch (e) {
+    loadingDiv.textContent = 'Error, try again!';
+  }
+}
+document.addEventListener('DOMContentLoaded', function() {
+  const input = document.getElementById('chat-input');
+  if (input) {
+    input.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') sendMessage();
+    });
+  }
+});
+</script>
+
 </body>
 </html>
