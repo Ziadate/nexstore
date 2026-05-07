@@ -1,212 +1,232 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="dark">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>{% block title %}NexStore – Premium Online Shopping{% endblock %}</title>
-  <meta name="description" content="{% block meta_desc %}Shop the latest electronics, fashion and more at NexStore.{% endblock %}"/>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
-</head>
-<body>
+from flask import Blueprint, request, jsonify
+import random
 
-<!-- ═══════════════════════════ NAVBAR ═══════════════════════════ -->
-<nav class="navbar" id="mainNav">
-  <div class="nav-inner">
-    <!-- Logo -->
-    <a href="{{ url_for('store.home') }}" class="nav-logo">
-      <span class="logo-icon">⚡</span>
-      <span class="logo-text">NexStore</span>
-    </a>
+chatbot_bp = Blueprint('chatbot', __name__)
 
-    <!-- Search bar -->
-    <div class="search-wrapper" id="searchWrapper">
-      <form action="{{ url_for('store.search') }}" method="get" class="search-form" autocomplete="off">
-        <input type="text" name="q" id="searchInput" class="search-input"
-               placeholder="Search products, brands, categories…"
-               value="{{ request.args.get('q','') }}"/>
-        <button type="submit" class="search-btn" aria-label="Search">🔍</button>
-      </form>
-      <div class="search-dropdown" id="searchDropdown"></div>
-    </div>
-
-    <!-- Right actions -->
-    <div class="nav-actions">
-      <!-- Theme toggle -->
-      <button class="icon-btn theme-toggle" id="themeToggle" title="Toggle theme" aria-label="Toggle dark/light mode">
-        <span class="theme-icon">🌙</span>
-      </button>
-
-      {% if session.get('user_id') %}
-        <!-- Cart -->
-        <a href="{{ url_for('cart.view_cart') }}" class="icon-btn cart-btn" id="cartBtn" aria-label="Cart">
-          🛒
-          <span class="badge" id="cartBadge">{{ cart_count|default(0) }}</span>
-        </a>
-
-        <!-- User menu -->
-        <div class="user-menu-wrapper">
-          <button class="user-btn icon-btn" id="userMenuBtn" aria-label="User menu">
-            👤 <span class="user-name-short">{{ session.get('user_name','').split()[0] }}</span> ▾
-          </button>
-          <div class="user-dropdown" id="userDropdown">
-            <a href="{{ url_for('order.profile') }}">👤 My Profile</a>
-            <a href="{{ url_for('order.profile') }}#orders">📦 My Orders</a>
-            <a href="{{ url_for('order.profile') }}#wishlist">❤️ Wishlist</a>
-            {% if session.get('role') == 'admin' %}
-            <a href="{{ url_for('admin.dashboard') }}">⚙️ Admin Dashboard</a>
-            {% endif %}
-            <hr/>
-            <a href="{{ url_for('auth.logout') }}" class="logout-link">🚪 Logout</a>
-          </div>
-        </div>
-      {% else %}
-        <a href="{{ url_for('auth.login') }}" class="btn btn-outline btn-sm">Login</a>
-        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">Register</a>
-      {% endif %}
-
-      <!-- Mobile hamburger -->
-      <button class="hamburger" id="hamburger" aria-label="Menu">☰</button>
-    </div>
-  </div>
-
-  <!-- Mobile nav -->
-  <div class="mobile-nav" id="mobileNav">
-    <a href="{{ url_for('store.home') }}">🏠 Home</a>
-    <a href="{{ url_for('store.search') }}">🔍 Search</a>
-    {% if session.get('user_id') %}
-    <a href="{{ url_for('cart.view_cart') }}">🛒 Cart ({{ cart_count|default(0) }})</a>
-    <a href="{{ url_for('order.profile') }}">👤 Profile</a>
-    {% if session.get('role') == 'admin' %}<a href="{{ url_for('admin.dashboard') }}">⚙️ Admin</a>{% endif %}
-    <a href="{{ url_for('auth.logout') }}">🚪 Logout</a>
-    {% else %}
-    <a href="{{ url_for('auth.login') }}">🔐 Login</a>
-    <a href="{{ url_for('auth.register') }}">✨ Register</a>
-    {% endif %}
-  </div>
-</nav>
-
-<!-- ═══════════════════════ TOAST CONTAINER ════════════════════════ -->
-<div class="toast-container" id="toastContainer">
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% for category, message in messages %}
-    <div class="toast toast-{{ category }} show" role="alert">
-      <span class="toast-icon">
-        {% if category == 'success' %}✅{% elif category == 'danger' %}❌{% elif category == 'warning' %}⚠️{% else %}ℹ️{% endif %}
-      </span>
-      <span class="toast-msg">{{ message }}</span>
-      <button class="toast-close" onclick="this.parentElement.remove()">✕</button>
-    </div>
-    {% endfor %}
-  {% endwith %}
-</div>
-
-<!-- ═══════════════════════════ MAIN ══════════════════════════════ -->
-<main class="main-content">
-  {% block content %}{% endblock %}
-</main>
-
-<!-- ═══════════════════════════ FOOTER ════════════════════════════ -->
-<footer class="footer">
-  <div class="footer-inner">
-    <div class="footer-brand">
-      <span class="logo-icon">⚡</span>
-      <span class="logo-text">NexStore</span>
-      <p>Your premium destination for the latest tech, fashion, and lifestyle products.</p>
-    </div>
-    <div class="footer-links">
-      <h4>Shop</h4>
-      <a href="{{ url_for('store.home') }}">Home</a>
-      <a href="{{ url_for('store.category', slug='phones') }}">Phones</a>
-      <a href="{{ url_for('store.category', slug='laptops') }}">Laptops</a>
-      <a href="{{ url_for('store.category', slug='gaming') }}">Gaming</a>
-    </div>
-    <div class="footer-links">
-      <h4>Account</h4>
-      <a href="{{ url_for('auth.login') }}">Login</a>
-      <a href="{{ url_for('auth.register') }}">Register</a>
-      {% if session.get('user_id') %}<a href="{{ url_for('order.profile') }}">Profile</a>{% endif %}
-    </div>
-    <div class="footer-links">
-      <h4>Support</h4>
-      <a href="#">FAQ</a>
-      <a href="#">Returns</a>
-      <a href="#">Shipping</a>
-      <a href="#">Contact</a>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <p>© 2025 NexStore. Built with ❤️ using Flask &amp; SQLite.</p>
-  </div>
-</footer>
-
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
-{% block extra_js %}{% endblock %}
-
-<!-- ═══════════════════════════ CHATBOT ════════════════════════════ -->
-<div id="chatbot-container" style="position:fixed;bottom:20px;right:20px;z-index:9999">
-  <div id="chatbot-box" style="display:none;width:320px;height:420px;background:#1a1a2e;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,0.3);flex-direction:column;overflow:hidden">
-    <div style="background:#FFB800;padding:15px;display:flex;justify-content:space-between;align-items:center">
-      <span style="color:#000;font-weight:bold">🤖 NexStore Assistant</span>
-      <button onclick="toggleChat()" style="background:none;border:none;color:#000;font-size:20px;cursor:pointer">×</button>
-    </div>
-    <div id="chat-messages" style="flex:1;overflow-y:auto;padding:15px;display:flex;flex-direction:column;gap:10px;height:300px"></div>
-    <div style="padding:10px;border-top:1px solid #333;display:flex;gap:10px">
-      <input id="chat-input" type="text" placeholder="اكتب سؤالك..." style="flex:1;padding:8px;border-radius:8px;border:none;background:#333;color:#fff;outline:none">
-      <button onclick="sendMessage()" style="background:#FFB800;border:none;padding:8px 15px;border-radius:8px;cursor:pointer;font-weight:bold">إرسال</button>
-    </div>
-  </div>
-  <button onclick="toggleChat()" style="width:60px;height:60px;border-radius:50%;background:#FFB800;border:none;font-size:25px;cursor:pointer;box-shadow:0 5px 15px rgba(0,0,0,0.3)">🤖</button>
-</div>
-
-<script>
-function toggleChat() {
-  const box = document.getElementById('chatbot-box');
-  box.style.display = box.style.display === 'none' ? 'flex' : 'none';
+# ══════════════════════════════════════════════
+#  بيانات المنتجات
+# ══════════════════════════════════════════════
+PRODUCTS = {
+    "iphone":   {"name": "iPhone 15 Pro Max",       "price": "$1,299", "rating": "4.9⭐", "stock": "متاح"},
+    "samsung":  {"name": "Samsung Galaxy S24 Ultra", "price": "$1,199", "rating": "4.8⭐", "stock": "متاح"},
+    "sony":     {"name": "Sony WH-1000XM5",          "price": "$349",   "rating": "4.9⭐", "stock": "متاح"},
+    "macbook":  {"name": "MacBook Pro 16\" M3 Max",  "price": "$2,499", "rating": "4.9⭐", "stock": "متاح"},
+    "ps5":      {"name": "PlayStation 5",            "price": "$499",   "rating": "4.8⭐", "stock": "محدود"},
+    "airpods":  {"name": "Apple AirPods Pro",        "price": "$249",   "rating": "4.7⭐", "stock": "متاح"},
+    "dell":     {"name": "Dell XPS 15",              "price": "$1,899", "rating": "4.7⭐", "stock": "متاح"},
+    "dyson":    {"name": "Dyson V15 Detect",         "price": "$699",   "rating": "4.8⭐", "stock": "متاح"},
+    "xbox":     {"name": "Xbox Series X",            "price": "$499",   "rating": "4.7⭐", "stock": "متاح"},
+    "rayban":   {"name": "Ray-Ban Aviator",          "price": "$199",   "rating": "4.6⭐", "stock": "متاح"},
 }
 
-function addMessage(text, isUser) {
-  const messages = document.getElementById('chat-messages');
-  const div = document.createElement('div');
-  div.style.cssText = 'padding:10px;border-radius:10px;max-width:80%;' +
-    (isUser
-      ? 'background:#FFB800;color:#000;align-self:flex-end'
-      : 'background:#333;color:#fff;align-self:flex-start');
-  div.textContent = text;
-  messages.appendChild(div);
-  messages.scrollTop = messages.scrollHeight;
-  return div;   /* ← نرجع الـ element عشان نقدر نعدل عليه */
+# ══════════════════════════════════════════════
+#  ردود ذكية متعددة لكل موضوع
+# ══════════════════════════════════════════════
+SMART_RESPONSES = {
+
+    "greet": {
+        "keywords": ["مرحبا", "اهلا", "هاي", "هلو", "سلام", "صباح", "مساء", "hello", "hi", "hey", "good morning", "good evening"],
+        "replies_ar": [
+            "أهلاً وسهلاً! 😊 أنا مساعد NexStore. إيه اللي تقدر أساعدك فيه النهارده؟",
+            "مرحباً بيك! 👋 تقدر تسألني عن أي منتج أو خدمة وأنا هساعدك.",
+            "هلا! 😄 يسعدني أساعدك. سواء بتدور على منتج أو عندك استفسار، أنا هنا!",
+        ],
+        "replies_en": [
+            "Welcome to NexStore! 😊 How can I help you today?",
+            "Hey there! 👋 I'm your NexStore assistant. Ask me anything!",
+            "Hello! 😄 Looking for something specific? I'm here to help!",
+        ]
+    },
+
+    "price": {
+        "keywords": ["سعر", "بكام", "كم", "تمن", "غالي", "رخيص", "ميزانية", "price", "cost", "how much", "expensive", "cheap", "budget"],
+        "replies_ar": [
+            "الأسعار عندنا لكل الميزانيات! 💰\n📱 موبايلات: من $199\n💻 لابتوبات: من $799\n🎧 سماعات: من $49\n🎮 ألعاب: من $59\nاستخدم كود DISCOUNT10 وهتاخد 10% خصم! 🎉",
+            "عندنا منتجات بأسعار تناسب الجميع! 💳\nمن $199 لحد $2,499.\nإيه الميزانية اللي بتفكر فيها؟ وهساعدك تلاقي الأنسب! 😊",
+        ],
+        "replies_en": [
+            "Prices for every budget! 💰\n📱 Phones: from $199\n💻 Laptops: from $799\n🎧 Headphones: from $49\nUse code DISCOUNT10 for 10% off! 🎉",
+            "We have products from $199 to $2,499! What's your budget? I'll help you find the best option! 😊",
+        ]
+    },
+
+    "products": {
+        "keywords": ["منتج", "منتجات", "عندكم", "بتبيع", "اشوف", "تصنيف", "فئه", "products", "sell", "have", "show", "category", "what do you sell"],
+        "replies_ar": [
+            "عندنا 6 تصنيفات رائعة! 🛍️\n📱 موبايلات - أحدث الإصدارات\n💻 لابتوبات - للشغل والدراسة\n🎧 سماعات - أفضل الماركات\n👗 ملابس - موضة العصر\n🏠 أجهزة منزلية\n🎮 ألعاب - PS5, Xbox وأكتر!\nأي تصنيف يهمك؟ 😊",
+            "أكتر من 50 منتج متاح! 🔥\nكل المنتجات معاها:\n⭐ تقييمات حقيقية من العملاء\n📸 صور واضحة\n✅ ضمان الجودة\nتفضل تصفح الموقع أو قولي إيه اللي بتدور عليه!",
+        ],
+        "replies_en": [
+            "6 amazing categories! 🛍️\n📱 Phones\n💻 Laptops\n🎧 Headphones\n👗 Fashion\n🏠 Home Appliances\n🎮 Gaming\nWhich interests you? 😊",
+            "Over 50 products available! 🔥 All with real ratings and quality guarantee. What are you looking for?",
+        ]
+    },
+
+    "discount": {
+        "keywords": ["خصم", "كوبون", "كود", "تخفيض", "عروض", "اوفر", "وفر", "discount", "coupon", "code", "offer", "sale", "promo", "deal"],
+        "replies_ar": [
+            "عندك حظ! 🎉 فيه كود خصم حصري:\n🏷️ الكود: DISCOUNT10\n💰 الخصم: 10% على أي طلب\nحطه في صفحة الـ Checkout وهيتطبق تلقائي! ✅",
+            "بالتأكيد! 😊 كود DISCOUNT10 بيديك 10% خصم على أي منتج.\nمش محتاج حد أدنى للطلب! 🛍️",
+        ],
+        "replies_en": [
+            "You're in luck! 🎉 Use code DISCOUNT10 for 10% off any order!\nJust enter it at checkout - automatic discount! ✅",
+            "Yes! Code DISCOUNT10 gives you 10% off everything, no minimum order! 🛍️",
+        ]
+    },
+
+    "shipping": {
+        "keywords": ["شحن", "توصيل", "بيجي", "امتي", "وقت", "مدة", "ايام", "بعيد", "shipping", "delivery", "when", "arrive", "time", "days", "fast"],
+        "replies_ar": [
+            "توصيل سريع وموثوق! 🚚\n⏱️ المدة: 3-5 أيام عمل\n📦 شحن مجاني على الطلبات فوق $500\n🔍 تتبع الطلب من صفحة 'My Orders'\nبنتأكد إن طلبك يوصل بأمان! 🛡️",
+            "بنوصلك في أقرب وقت! 🚀\n• داخل المحافظة: 2-3 أيام\n• خارج المحافظة: 3-5 أيام\n• فوق $500: شحن مجاني 💸\nعندك استفسار تاني؟",
+        ],
+        "replies_en": [
+            "Fast & reliable delivery! 🚚\n⏱️ 3-5 business days\n📦 Free shipping on orders over $500\n🔍 Track in 'My Orders'\nYour order is in safe hands! 🛡️",
+        ]
+    },
+
+    "return": {
+        "keywords": ["رجوع", "ارجاع", "إرجاع", "استرجاع", "مرتجع", "عيب", "تالف", "مكسور", "return", "refund", "broken", "damaged", "defect", "exchange"],
+        "replies_ar": [
+            "سياسة إرجاع مريحة! 🔄\n✅ 14 يوم من تاريخ الاستلام\n📦 المنتج بحالته الأصلية\n💳 الاسترداد خلال 5-7 أيام\n📧 تواصل: support@nexstore.com\nراحتك أهم حاجة عندنا! 😊",
+            "مش مبسوط؟ مش مشكلة! 😊\nعندك 14 يوم ترجع أي منتج بدون تعقيدات.\nبعت إيميل على support@nexstore.com وهنساعدك فوراً! 🤝",
+        ],
+        "replies_en": [
+            "Hassle-free returns! 🔄\n✅ 14 days from delivery\n📦 Original condition required\n💳 Refund in 5-7 days\n📧 support@nexstore.com\nYour satisfaction matters! 😊",
+        ]
+    },
+
+    "payment": {
+        "keywords": ["دفع", "فلوس", "كريدت", "كارد", "كاش", "فيزا", "ماستر", "محفظه", "payment", "pay", "cash", "card", "visa", "credit", "wallet", "mastercard"],
+        "replies_ar": [
+            "3 طرق دفع آمنة! 💳\n💵 كاش عند الاستلام\n💳 كريدت كارد / فيزا / ماستر كارد\n📱 محفظة إلكترونية\nكل المعاملات محمية بتشفير SSL 🔒",
+            "الدفع عندنا سهل وآمن! 🔐\nاختار اللي يناسبك:\n• كاش عند الباب 💵\n• أونلاين بالكارت 💳\n• محفظة إلكترونية 📱\nكلهم 100% آمن!",
+        ],
+        "replies_en": [
+            "3 secure payment options! 💳\n💵 Cash on delivery\n💳 Credit/Debit card\n📱 Digital wallet\nAll secured with SSL encryption 🔒",
+        ]
+    },
+
+    "contact": {
+        "keywords": ["تواصل", "اتصل", "رقم", "إيميل", "ايميل", "دعم", "contact", "support", "email", "phone", "help", "assist"],
+        "replies_ar": [
+            "فريق الدعم جاهز! 📞\n📧 إيميل: support@nexstore.com\n⏰ أوقات العمل: 9ص - 9م\n💬 رد خلال 24 ساعة\nهنساعدك في أي استفسار! 😊",
+            "تقدر تتواصل معانا! 🤝\n📧 support@nexstore.com\nبنرد على كل الرسائل في أقرب وقت. مش هتستنى كتير! ⚡",
+        ],
+        "replies_en": [
+            "Our support team is ready! 📞\n📧 support@nexstore.com\n⏰ Hours: 9AM - 9PM\nWe respond within 24 hours! 😊",
+        ]
+    },
+
+    "order": {
+        "keywords": ["طلب", "اوردر", "طلبي", "وين طلبي", "فين طلبي", "order", "track", "where is", "my order", "status"],
+        "replies_ar": [
+            "تتبع طلبك بسهولة! 📦\n1️⃣ ادخل على حسابك\n2️⃣ روح لـ 'My Profile'\n3️⃣ اضغط على 'My Orders'\nهتلاقي:\n• حالة الطلب\n• موعد التسليم\n• تفاصيل المنتجات ✅",
+            "طلبك في أيدي أمينة! 🛡️\nروح لـ 'My Orders' في الملف الشخصي وهتشوف كل حاجة.\nلو فيه مشكلة بعت على support@nexstore.com 📧",
+        ],
+        "replies_en": [
+            "Track your order easily! 📦\n1️⃣ Login\n2️⃣ Go to 'My Profile'\n3️⃣ Click 'My Orders'\nAll details are there! ✅",
+        ]
+    },
+
+    "account": {
+        "keywords": ["حساب", "تسجيل", "دخول", "باسورد", "كلمة سر", "نسيت", "account", "login", "register", "password", "sign up", "forgot"],
+        "replies_ar": [
+            "إنشاء حساب مجاني وسريع! ✨\nاضغط على 'Register' وادخل:\n• الاسم\n• الإيميل\n• كلمة السر\nوهتستمتع بـ:\n• تتبع الطلبات 📦\n• قائمة المفضلة ❤️\n• تاريخ المشتريات 📋",
+            "نسيت كلمة السر؟ 🔐\nاضغط 'Forgot Password' في صفحة تسجيل الدخول.\nهيبعتلك إيميل لإعادة التعيين فوراً! 📧",
+        ],
+        "replies_en": [
+            "Create a free account! ✨\nClick 'Register', enter your details and enjoy:\n• Order tracking 📦\n• Wishlist ❤️\n• Purchase history 📋",
+            "Forgot password? 🔐\nClick 'Forgot Password' on the login page and we'll email you a reset link! 📧",
+        ]
+    },
+
+    "thanks": {
+        "keywords": ["شكرا", "شكراً", "تسلم", "يسلمو", "ممتاز", "حلو", "thanks", "thank you", "great", "awesome", "perfect", "amazing"],
+        "replies_ar": [
+            "العفو! 😊 يسعدني أساعدك. فيه حاجة تانية؟",
+            "تسلم! 🌟 أنا هنا لو احتجت أي حاجة تانية. تسوق ممتع! 🛍️",
+            "بكل سرور! 💛 لو عندك أي سؤال تاني، أنا هنا دايماً! 😊",
+        ],
+        "replies_en": [
+            "You're welcome! 😊 Anything else I can help with?",
+            "Happy to help! 🌟 Enjoy shopping at NexStore! 🛍️",
+            "My pleasure! 💛 Feel free to ask anytime! 😊",
+        ]
+    },
+
+    "bye": {
+        "keywords": ["مع السلامه", "باي", "وداعا", "اشوفك", "bye", "goodbye", "see you", "later", "take care"],
+        "replies_ar": [
+            "مع السلامة! 👋 يسعدنا خدمتك دايماً في NexStore! 🌟",
+            "باي باي! 😊 متشكرين على زيارتك. لو احتجت أي حاجة إحنا هنا! 💛",
+        ],
+        "replies_en": [
+            "Goodbye! 👋 Thanks for visiting NexStore! Come back soon! 🌟",
+            "See you later! 😊 Happy shopping! 💛",
+        ]
+    },
 }
 
-async function sendMessage() {
-  const input = document.getElementById('chat-input');
-  const message = input.value.trim();
-  if (!message) return;
+DEFAULT_REPLIES_AR = [
+    "مش فاهم تماماً 😅 ممكن تسألني عن:\n• 📱 منتج معين (iPhone, Samsung, PS5...)\n• 💰 الأسعار والخصومات\n• 🚚 الشحن والتوصيل\n• 🔄 سياسة الإرجاع\n• 💳 طرق الدفع\n• 📦 تتبع الطلبات",
+    "سؤالك مش واضح ليا كتير 🤔 جرب تسألني عن منتج معين أو خدمة محددة وهساعدك! 😊",
+    "مش متأكد من سؤالك 😅 ممكن تكون أكتر تحديداً؟ مثلاً: 'كم سعر iPhone؟' أو 'الشحن بياخد كام يوم؟'",
+]
 
-  addMessage(message, true);
-  input.value = '';
+DEFAULT_REPLIES_EN = [
+    "I'm not sure I understood 😅 I can help with:\n• 📱 Products (iPhone, Samsung, PS5...)\n• 💰 Prices & discounts\n• 🚚 Shipping info\n• 🔄 Returns\n• 💳 Payment\n• 📦 Order tracking",
+    "Could you be more specific? 🤔 Try asking about a product or service! 😊",
+]
 
-  /* نحتفظ بـ reference للـ "جاري الرد..." مباشرةً */
-  const loadingDiv = addMessage('جاري الرد...', false);
 
-  try {
-    const response = await fetch('/chatbot', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({message})
-    });
-    const data = await response.json();
-    /* نعدّل على نفس الـ element مباشرةً بدل lastChild */
-    loadingDiv.textContent = data.response || data.error || 'حدث خطأ، حاول تاني!';
-  } catch (e) {
-    loadingDiv.textContent = 'حدث خطأ، حاول تاني!';
-  }
-}
+def find_product(message):
+    message_lower = message.lower()
+    for key, product in PRODUCTS.items():
+        if key in message_lower:
+            return product
+    return None
 
-document.getElementById('chat-input').addEventListener('keypress', function(e) {
-  if (e.key === 'Enter') sendMessage();
-});
-</script>
-</body>
-</html>
+
+def get_smart_reply(message):
+    message_lower = message.lower().strip()
+    is_arabic = any('\u0600' <= c <= '\u06FF' for c in message)
+
+    # دور على منتج معين أولاً
+    product = find_product(message_lower)
+    if product:
+        if is_arabic:
+            replies = [
+                f"اختيار ممتاز! 🌟\n📦 {product['name']}\n💰 السعر: {product['price']}\n⭐ التقييم: {product['rating']}\n✅ الحالة: {product['stock']}\nاستخدم كود DISCOUNT10 للحصول على 10% خصم! 🎉",
+                f"طبعاً! 😊 {product['name']} متاح عندنا.\n💵 بـ {product['price']} بس!\n⭐ {product['rating']} من العملاء\nعايز تضيفه للسلة؟ 🛒",
+            ]
+        else:
+            replies = [
+                f"Great choice! 🌟\n📦 {product['name']}\n💰 Price: {product['price']}\n⭐ Rating: {product['rating']}\n✅ Status: Available\nUse code DISCOUNT10 for 10% off! 🎉",
+                f"Yes! 😊 {product['name']} is available at {product['price']}!\n⭐ {product['rating']} rating\nWant to add it to cart? 🛒",
+            ]
+        return random.choice(replies)
+
+    # دور على موضوع من القاموس
+    for topic, data in SMART_RESPONSES.items():
+        for keyword in data["keywords"]:
+            if keyword in message_lower:
+                replies = data["replies_ar"] if is_arabic else data.get("replies_en", data["replies_ar"])
+                return random.choice(replies)
+
+    return random.choice(DEFAULT_REPLIES_AR if is_arabic else DEFAULT_REPLIES_EN)
+
+
+@chatbot_bp.route('/chatbot', methods=['POST'])
+def chat():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data'}), 400
+        user_message = data.get('message', '').strip()
+        if not user_message:
+            return jsonify({'error': 'Empty message'}), 400
+        reply = get_smart_reply(user_message)
+        return jsonify({'response': reply, 'status': 'success'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
