@@ -23,13 +23,15 @@ def create_app():
     app.config['ADMIN_PASSWORD'] = 'nexstore2024'
 
     # ── Register Blueprints ───────────────────────────────────────────────
-    from controllers.auth_controller    import auth_bp
+    from controllers.auth_controller    import auth_bp 
+    from controllers.chatbot_controller import chatbot_bp
     from controllers.product_controller import store_bp
     from controllers.cart_controller    import cart_bp
     from controllers.order_controller   import order_bp
     from controllers.admin_controller   import admin_bp
 
     app.register_blueprint(auth_bp)
+    app.register_blueprint(chatbot_bp)
     app.register_blueprint(store_bp)
     app.register_blueprint(cart_bp)
     app.register_blueprint(order_bp)
