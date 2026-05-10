@@ -75,7 +75,11 @@
       <button class="modal-close" onclick="closeModal('editModal')">✕</button>
     </div>
     <div class="modal-body">
-      <form method="POST" id="editForm" action="">
+      <!-- Loading indicator -->
+      <div id="editLoading" style="text-align:center;padding:2rem;color:var(--muted)">
+        ⏳ Loading product data...
+      </div>
+      <form method="POST" id="editForm" action="" style="display:none">
         <div class="form-row2">
           <div class="form-group">
             <label>Product Name *</label>
@@ -170,9 +174,9 @@
           <td>
             <div style="display:flex;gap:0.4rem;flex-wrap:wrap">
               <button class="btn btn-outline btn-sm"
-                onclick="openEdit({{ p['id'] }}, {{ p|tojson|safe }})">✏️ Edit</button>
+                onclick="openEdit({{ p['id'] }})">✏️ Edit</button>
               <form method="POST" action="{{ url_for('admin.delete_product_route', product_id=p['id']) }}"
-                    onsubmit="return confirm('Delete {{ p['name'] }}?')">
+                    onsubmit="return confirm('Delete {{ p['name']|replace("'", "\\'") }}?')">
                 <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
               </form>
             </div>
@@ -197,18 +201,35 @@ document.querySelectorAll('.modal-overlay').forEach(el => {
   el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
 });
 
-function openEdit(id, data) {
-  document.getElementById('editForm').action = '/admin/products/edit/' + id;
-  document.getElementById('edit_name').value      = data.name || '';
-  document.getElementById('edit_desc').value      = data.description || '';
-  document.getElementById('edit_price').value     = data.price || '';
-  document.getElementById('edit_old_price').value = data.old_price || '';
-  document.getElementById('edit_cat').value       = data.category_id || '';
-  document.getElementById('edit_stock').value     = data.stock || '';
-  document.getElementById('edit_image_url').value = data.image_url || '';
-  document.getElementById('edit_featured').checked = !!data.is_featured;
-  document.getElementById('edit_deal').checked     = !!data.is_deal;
+function openEdit(id) {
+  // Show modal with loading state
+  document.getElementById('editLoading').style.display = 'block';
+  document.getElementById('editForm').style.display = 'none';
   openModal('editModal');
+
+  // Fetch product data from API
+  fetch('/admin/api/product/' + id)
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('editForm').action = '/admin/products/edit/' + id;
+      document.getElementById('edit_name').value      = data.name || '';
+      document.getElementById('edit_desc').value      = data.description || '';
+      document.getElementById('edit_price').value     = data.price || '';
+      document.getElementById('edit_old_price').value = data.old_price || '';
+      document.getElementById('edit_cat').value       = data.category_id || '';
+      document.getElementById('edit_stock').value     = data.stock || '';
+      document.getElementById('edit_image_url').value = data.image_url || '';
+      document.getElementById('edit_featured').checked = !!data.is_featured;
+      document.getElementById('edit_deal').checked     = !!data.is_deal;
+
+      // Hide loading, show form
+      document.getElementById('editLoading').style.display = 'none';
+      document.getElementById('editForm').style.display = 'block';
+    })
+    .catch(err => {
+      document.getElementById('editLoading').textContent = '❌ Failed to load product data. Please try again.';
+      console.error('Edit fetch error:', err);
+    });
 }
 </script>
 {% endblock %}
