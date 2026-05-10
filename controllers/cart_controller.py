@@ -8,6 +8,7 @@ from controllers.auth_controller import login_required
 from models.cart import (get_cart_items, add_to_cart, update_quantity,
                          remove_from_cart, get_cart_total, get_cart_count)
 from models.product import get_product_by_id
+from models.database import get_db
 
 cart_bp = Blueprint('cart', __name__, url_prefix='/cart')
 
@@ -17,10 +18,20 @@ PROMO_CODES = {
 }
 
 
+def get_cart_quantity_for_product(user_id, product_id):
+    """الكمية الموجودة في السلة حالياً لمنتج معين."""
+    conn = get_db()
+    row = conn.execute(
+        "SELECT COALESCE(SUM(quantity), 0) FROM cart WHERE user_id=? AND product_id=?",
+        (user_id, product_id)
+    ).fetchone()
+    conn.close()
+    return row[0] if row else 0
+
+
 @cart_bp.route('/')
 @login_required
 def view_cart():
-    """Render the cart page with items, totals, and promo code handling."""
     user_id   = session['user_id']
     items     = get_cart_items(user_id)
     subtotal  = get_cart_total(user_id)
@@ -47,29 +58,49 @@ def view_cart():
 @cart_bp.route('/add', methods=['POST'])
 @login_required
 def add():
-    """Add a product to the cart (AJAX or form POST)."""
     user_id    = session['user_id']
     product_id = request.form.get('product_id', type=int)
     variant_id = request.form.get('variant_id', type=int)
     quantity   = request.form.get('quantity', 1, type=int)
 
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    # تحقق من وجود المنتج
     product = get_product_by_id(product_id)
     if not product:
-        if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        if is_ajax:
             return jsonify({'success': False, 'message': 'Product not found'}), 404
         flash('Product not found.', 'danger')
         return redirect(url_for('store.home'))
 
-    if product['stock'] < 1:
-        if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'success': False, 'message': 'Out of stock'}), 400
+    stock = product['stock']
+
+    # تحقق من الـ stock
+    if stock < 1:
+        if is_ajax:
+            return jsonify({'success': False, 'message': 'Sorry, this item is out of stock!'}), 400
         flash('Sorry, this item is out of stock.', 'warning')
+        return redirect(request.referrer or url_for('store.home'))
+
+    # الكمية الموجودة في السلة حالياً
+    in_cart = get_cart_quantity_for_product(user_id, product_id)
+
+    # لو الكمية المطلوبة + الموجودة في السلة أكبر من الـ stock
+    if in_cart + quantity > stock:
+        available = stock - in_cart
+        if available <= 0:
+            msg = f'You already have all available stock of "{product["name"]}" in your cart!'
+        else:
+            msg = f'Only {available} more unit(s) available for "{product["name"]}"!'
+        if is_ajax:
+            return jsonify({'success': False, 'message': msg}), 400
+        flash(msg, 'warning')
         return redirect(request.referrer or url_for('store.home'))
 
     add_to_cart(user_id, product_id, quantity, variant_id)
     new_count = get_cart_count(user_id)
 
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+    if is_ajax:
         return jsonify({
             'success': True,
             'message': f'"{product["name"]}" added to cart!',
@@ -83,13 +114,20 @@ def add():
 @cart_bp.route('/update', methods=['POST'])
 @login_required
 def update():
-    """Update the quantity of a cart item."""
     user_id    = session['user_id']
     product_id = request.form.get('product_id', type=int)
     quantity   = request.form.get('quantity', type=int)
 
     if quantity is not None and product_id:
-        update_quantity(user_id, product_id, quantity)
+        # تحقق من الـ stock قبل التحديث
+        product = get_product_by_id(product_id)
+        if product and quantity > product['stock']:
+            flash(f'Only {product["stock"]} unit(s) available!', 'warning')
+            return redirect(url_for('cart.view_cart'))
+        if quantity < 1:
+            remove_from_cart(user_id, product_id)
+        else:
+            update_quantity(user_id, product_id, quantity)
 
     return redirect(url_for('cart.view_cart'))
 
@@ -97,7 +135,6 @@ def update():
 @cart_bp.route('/remove', methods=['POST'])
 @login_required
 def remove():
-    """Remove an item from the cart."""
     user_id    = session['user_id']
     product_id = request.form.get('product_id', type=int)
     remove_from_cart(user_id, product_id)
@@ -114,7 +151,6 @@ def remove():
 @cart_bp.route('/promo', methods=['POST'])
 @login_required
 def apply_promo():
-    """Apply or clear a promo code."""
     code = request.form.get('promo_code', '').strip().upper()
     if code in PROMO_CODES:
         session['promo_code'] = code
@@ -128,7 +164,6 @@ def apply_promo():
 
 @cart_bp.route('/count')
 def count():
-    """JSON endpoint for live cart badge updates."""
     if 'user_id' in session:
         return jsonify({'count': get_cart_count(session['user_id'])})
     return jsonify({'count': 0})
