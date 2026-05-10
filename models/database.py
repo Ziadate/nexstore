@@ -14,9 +14,11 @@ DB_PATH = os.path.join(BASE_DIR, 'store.db')
 
 def get_db():
     """Open a new database connection with row_factory for dict-like access."""
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=30)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA journal_mode = WAL")
+    conn.execute("PRAGMA busy_timeout = 30000")
     return conn
 
 
@@ -169,7 +171,6 @@ def seed_db():
     )
 
     # ── Products ──────────────────────────────────────────────────────────────
-    # (name, desc, price, old_price, cat_id, image_url, stock, rating, reviews, featured, deal)
     products = [
         # Phones (cat 1)
         ('Samsung Galaxy S24 Ultra', 'The ultimate Samsung flagship with AI-powered camera and titanium frame.', 1199.99, 1399.99, 1, 'https://images.unsplash.com/photo-1707065090130-f80e920d393f?auto=format&fit=crop&w=600&h=600&q=80', 15, 4.8, 2341, 1, 0),
@@ -197,7 +198,7 @@ def seed_db():
         ('Adidas Ultraboost 23', 'The ultimate running shoe with responsive Boost cushioning.', 179.99, 219.99, 4, 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=600&h=600&q=80', 45, 4.7, 4320, 0, 1),
         ('Levi\'s 501 Original Jeans', 'The original and most iconic jeans in history.', 79.99, 99.99, 4, 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=600&h=600&q=80', 80, 4.5, 9870, 0, 0),
         ('Ray-Ban Aviator Classic', 'Timeless aviator sunglasses with glass lenses.', 199.99, 249.99, 4, 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=600&h=600&q=80', 60, 4.8, 7650, 1, 0),
-        ('The North Face Puffer Jacket', 'Warm, lightweight 550-fill down jacket for cold adventures.', 249.99, 299.99, 4, 'https://images.unsplash.com/photo-1605518216938-7c31b7b14ad0?auto=format&fit=crop&w=600&h=600&q=80', 30, 4.7, 3210, 0, 0),
+        ('The North Face Puffer Jacket', 'Warm, lightweight 550-fill down jacket for cold adventures.', 249.99, 299.99, 4, 'https://images.unsplash.com/photo-1606521467890-24e4f4b4a0d5?auto=format&fit=crop&w=600&h=600&q=80', 30, 4.7, 3210, 0, 0),
 
         # Home Appliances (cat 5)
         ('Dyson V15 Detect', 'Laser Detect technology reveals hidden dust with powerful suction.', 699.99, 799.99, 5, 'https://images.unsplash.com/photo-1558317374-067fb5f30001?auto=format&fit=crop&w=600&h=600&q=80', 20, 4.8, 4560, 1, 0),
@@ -214,7 +215,6 @@ def seed_db():
         ('SteelSeries Apex Pro', 'The world\'s fastest mechanical keyboard with adjustable actuation.', 199.99, 249.99, 6, 'https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=600&h=600&q=80', 28, 4.8, 4320, 0, 0),
         ('LG UltraGear 27" 4K', '27" 4K IPS gaming monitor with 144Hz and 1ms response time.', 599.99, 699.99, 6, 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=600&h=600&q=80', 12, 4.7, 2340, 1, 1),
     ]
-
     cursor.executemany(
         """INSERT INTO products
            (name, description, price, old_price, category_id, image_url,
@@ -222,7 +222,6 @@ def seed_db():
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         products
     )
-
     conn.commit()
     conn.close()
     print("Database seeded successfully!")
